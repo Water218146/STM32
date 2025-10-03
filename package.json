@@ -1,0 +1,32 @@
+{
+  "name": "gd32-demo-button-project",
+  "version": "1.0.0",
+  "description": "GD32 Demo Button Project - STM32F4xx嵌入式按键演示项目展示网站",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 8080 -c-1",
+    "dev": "live-server --port=8080 --no-browser",
+    "build": "echo 'Static site - no build needed'",
+    "deploy": "echo 'Ready for deployment'"
+  },
+  "keywords": [
+    "stm32",
+    "embedded",
+    "button",
+    "led",
+    "hal",
+    "demo",
+    "gd32"
+  ],
+  "author": "STM32 Developer",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/gd32-demo-button"
+  },
+  "homepage": "https://your-username.github.io/gd32-demo-button"
+}
