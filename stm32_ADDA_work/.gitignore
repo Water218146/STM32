@@ -1,0 +1,44 @@
+# 编译输出文件
+MDK-ARM/GD32_Demo_01/*.o
+MDK-ARM/GD32_Demo_01/*.d
+MDK-ARM/GD32_Demo_01/*.crf
+MDK-ARM/GD32_Demo_01/*.lst
+MDK-ARM/GD32_Demo_01/*.map
+MDK-ARM/GD32_Demo_01/*.axf
+MDK-ARM/GD32_Demo_01/*.hex
+MDK-ARM/GD32_Demo_01/*.bin
+MDK-ARM/GD32_Demo_01/*.htm
+MDK-ARM/GD32_Demo_01/*.lnp
+MDK-ARM/GD32_Demo_01/*.sct
+MDK-ARM/GD32_Demo_01/*.Bak
+MDK-ARM/GD32_Demo_01/*.dep
+MDK-ARM/GD32_Demo_01/*.build_log.htm
+
+# Keil项目用户文件
+*.uvguix*
+*.uvoptx
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Node.js (如果使用)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE文件
+.vscode/
+.idea/
+*.sublime-*
+
+# 部署文件
+dist/
+build/

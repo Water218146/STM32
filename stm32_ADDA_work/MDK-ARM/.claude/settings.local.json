@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(cat:*)",
+      "Bash(claude --version:*)",
+      "Bash(npm outdated:*)",
+      "Bash(npm view:*)",
+      "Bash(git clone:*)",
+      "Bash(cargo:*)",
+      "Bash(rustup default:*)",
+      "Bash(npm install:*)",
+      "Bash(ccline --version:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(ccline --init:*)",
+      "Bash(ccline)",
+      "Bash(ccline --check:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
