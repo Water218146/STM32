@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STM32 GPIO Signal 配置指南 - 米醋电子工作室</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0071e3;
+            --secondary-color: #86b9ff;
+            --dark-color: #1d1d1f;
+            --light-color: #f5f5f7;
+            --success-color: #28cd41;
+            --warning-color: #ff9500;
+            --danger-color: #ff3b30;
+            --gray-color: #86868b;
+            --highlight-color: #5ac8fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary-color), var(--highlight-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            padding: 30px 0;
+        }
+        
+        h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin: 40px 0 20px;
+            color: var(--primary-color);
+        }
+        
+        .section {
+            padding: 40px 0;
+        }
+        
+        .cubemx-config {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .cubemx-sidebar {
+            background-color: #f0f0f0;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .cubemx-main {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .card-content {
+            font-size: 16px;
+            color: var(--dark-color);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .badge-primary {
+            background-color: rgba(0, 113, 227, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .badge-success {
+            background-color: rgba(40, 205, 65, 0.1);
+            color: var(--success-color);
+        }
+        
+        .badge-warning {
+            background-color: rgba(255, 149, 0, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .badge-danger {
+            background-color: rgba(255, 59, 48, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .config-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .config-item:last-child {
+            border-bottom: none;
+        }
+        
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        .copyright {
+            font-size: 14px;
+            color: var(--gray-color);
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .cubemx-config {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 28px;
+            }
+            
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">米醋电子工作室</div>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <h1>STM32 GPIO Signal 配置指南</h1>
+        
+        <div class="cubemx-config">
+            <div class="cubemx-sidebar">
+                <h2>GPIO配置选项</h2>
+                <ul id="config-menu" style="list-style: none; padding: 0;">
+                    <li style="padding: 10px; cursor: pointer; border-radius: 8px; margin-bottom: 5px;" data-config="gpio-mode">GPIO Mode</li>
+                    <li style="padding: 10px; cursor: pointer; border-radius: 8px; margin-bottom: 5px;" data-config="gpio-output">GPIO Output Type</li>
+                    <li style="padding: 10px; cursor: pointer; border-radius: 8px; margin-bottom: 5px;" data-config="gpio-speed">GPIO Speed</li>
+                    <li style="padding: 10px; cursor: pointer; border-radius: 8px; margin-bottom: 5px;" data-config="gpio-pull">GPIO Pull-up/Pull-down</li>
+                    <li style="padding: 10px; cursor: pointer; border-radius: 8px; margin-bottom: 5px;" data-config="gpio-label">GPIO Label</li>
+                    <li style="padding: 10px; cursor: pointer; border-radius: 8px; background-color: var(--primary-color); color: white; margin-bottom: 5px;" data-config="gpio-signal">GPIO Signal</li>
+                </ul>
+            </div>
+            
+            <div class="cubemx-main">
+                <div id="gpio-signal-content" class="config-item">
+                    <h3>GPIO Signal (引脚信号)</h3>
+                    <p>当GPIO配置为备用功能(Alternate Function)模式时，需要选择特定的信号类型。</p>
+                    
+                    <div style="margin: 20px 0;">
+                        <div style="padding: 20px; background-color: #f0f0f0; border-radius: 8px;">
+                            <strong>常见的备用功能信号类型：</strong>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+                                <span class="badge badge-primary">TIM1_CH1 (定时器通道)</span>
+                                <span class="badge badge-primary">USART1_TX (串口发送)</span>
+                                <span class="badge badge-primary">USART1_RX (串口接收)</span>
+                                <span class="badge badge-primary">SPI1_SCK (SPI时钟)</span>
+                                <span class="badge badge-primary">SPI1_MISO (SPI主入从出)</span>
+                                <span class="badge badge-primary">SPI1_MOSI (SPI主出从入)</span>
+                                <span class="badge badge-primary">I2C1_SCL (I2C时钟线)</span>
+                                <span class="badge badge-primary">I2C1_SDA (I2C数据线)</span>
+                                <span class="badge badge-primary">ADC1_IN0 (ADC输入通道)</span>
+                                <span class="badge badge-primary">DAC1_OUT1 (DAC输出通道)</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 20px; background-color: #f0f0f0; border-radius: 8px;">
+                            <strong>LED控制相关的信号类型：</strong>
+                            <ul style="margin-top: 10px; padding-left: 20px;">
+                                <li><strong>TIMx_CHx</strong> - 定时器PWM输出通道，用于控制LED亮度</li>
+                                <li><strong>GPIO_Output</strong> - 普通GPIO输出，用于简单的LED开关控制</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div style="background-color: #e6f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                        <strong>配置提示：</strong> 要实现LED亮度调节（呼吸灯效果），应将GPIO配置为备用功能模式，并选择相应的定时器PWM通道信号。同时，需要在定时器配置中启用相应的PWM输出通道。
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">GPIO Signal 详细说明</div>
+            <div class="card-content">
+                <p>当GPIO配置为备用功能(Alternate Function)模式时，需要选择特定的信号类型。</p>
+                
+                <div style="padding: 20px; background-color: #f5f5f7; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="margin-bottom: 15px; color: var(--dark-color);">常见的备用功能信号类型：</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+                        <span class="badge badge-primary">TIM1_CH1 (定时器通道)</span>
+                        <span class="badge badge-primary">USART1_TX (串口发送)</span>
+                        <span class="badge badge-primary">USART1_RX (串口接收)</span>
+                        <span class="badge badge-primary">SPI1_SCK (SPI时钟)</span>
+                        <span class="badge badge-primary">SPI1_MISO (SPI主入从出)</span>
+                        <span class="badge badge-primary">SPI1_MOSI (SPI主出从入)</span>
+                        <span class="badge badge-primary">I2C1_SCL (I2C时钟线)</span>
+                        <span class="badge badge-primary">I2C1_SDA (I2C数据线)</span>
+                        <span class="badge badge-primary">ADC1_IN0 (ADC输入通道)</span>
+                        <span class="badge badge-primary">DAC1_OUT1 (DAC输出通道)</span>
+                    </div>
+                </div>
+                
+                <div style="padding: 20px; background-color: #f5f5f7; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="margin-bottom: 15px; color: var(--dark-color);">LED控制相关的信号类型：</h3>
+                    <ul style="margin-top: 10px; padding-left: 20px;">
+                        <li><strong>TIMx_CHx</strong> - 定时器PWM输出通道，用于控制LED亮度</li>
+                        <li><strong>GPIO_Output</strong> - 普通GPIO输出，用于简单的LED开关控制</li>
+                    </ul>
+                </div>
+                
+                <div style="background-color: #e6f7ff; padding: 20px; border-radius: 12px; margin: 30px 0; border-left: 5px solid var(--primary-color);">
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px;">配置提示</h3>
+                    <p>要实现LED亮度调节（呼吸灯效果），应将GPIO配置为备用功能模式，并选择相应的定时器PWM通道信号。同时，需要在定时器配置中启用相应的PWM输出通道。</p>
+                </div>
+                
+                <h3 style="margin-top: 30px;">选择正确的GPIO信号的重要性</h3>
+                <p>选择正确的GPIO信号对于实现预期功能至关重要。STM32微控制器的每个引脚可以支持多种功能，通过配置备用功能寄存器(AFR)可以选择特定的功能。需要注意的是，并非所有引脚都支持所有功能，因此在设计电路时需要先确认引脚的可用功能。</p>
+                
+                <div style="margin-top: 30px;">
+                    <h3>示例：LED亮度控制</h3>
+                    <p>要实现LED亮度控制，可以按照以下步骤配置GPIO：</p>
+                    <ol style="margin-left: 20px; margin-top: 10px;">
+                        <li>在CubeMX中选择目标引脚</li>
+                        <li>将GPIO模式设置为"Alternate Function"</li>
+                        <li>从信号列表中选择相应的定时器通道(如TIM1_CH1)</li>
+                        <li>在定时器配置中启用PWM生成</li>
+                        <li>生成代码后，可以通过改变PWM占空比来控制LED亮度</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <div class="copyright">
+                © 2025 米醋电子工作室. 保留所有权利.
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // 配置菜单项点击效果
+        document.querySelectorAll('#config-menu li').forEach(item => {
+            item.addEventListener('click', () => {
+                // 获取当前点击的配置选项ID
+                const configId = item.getAttribute('data-config');
+                
+                // 重置所有菜单项样式
+                document.querySelectorAll('#config-menu li').forEach(i => {
+                    i.style.backgroundColor = '';
+                    i.style.color = '';
+                });
+                
+                // 设置当前选中项样式
+                item.style.backgroundColor = 'var(--primary-color)';
+                item.style.color = 'white';
+                
+                // 根据选项ID生成对应的内容
+                let content = '';
+                
+                switch(configId) {
+                    case 'gpio-mode':
+                        content = `
+                            <h3>GPIO Mode (GPIO模式)</h3>
+                            <p>决定引脚的基本工作方式，是STM32CubeMX中最基础的配置项。</p>
+                            
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0;">
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>Input Mode (输入模式)</strong>
+                                    <p>配置引脚为输入，用于读取外部信号</p>
+                                </div>
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>Output Mode (输出模式)</strong>
+                                    <p>配置引脚为输出，用于控制外部设备</p>
+                                </div>
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>Analog Mode (模拟模式)</strong>
+                                    <p>配置引脚为模拟模式，用于ADC/DAC</p>
+                                </div>
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>Alternate Function (备用功能)</strong>
+                                    <p>连接内部外设如UART/SPI/I2C等</p>
+                                </div>
+                            </div>
+                            
+                            <div style="background-color: #e6f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                                <strong>配置提示：</strong> 对于LED控制，通常选择<strong>Output Mode</strong>。如果需要通过PWM控制LED亮度，则选择<strong>Alternate Function</strong>并连接到定时器。
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-output':
+                        content = `
+                            <h3>GPIO Output Type (输出类型)</h3>
+                            <p>当GPIO配置为输出模式时，可以选择不同的输出类型。</p>
+                            
+                            <div style="display: flex; flex-wrap: wrap; gap: 20px; margin: 20px 0;">
+                                <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>Push-Pull (推挽输出)</strong>
+                                    <p>可以主动输出高电平和低电平，驱动能力强。</p>
+                                    <div style="margin-top: 10px;">
+                                        <span class="badge badge-primary">高电平：主动拉高</span>
+                                        <span class="badge badge-primary">低电平：主动拉低</span>
+                                    </div>
+                                    <div style="margin-top: 10px;">
+                                        <span class="badge badge-success">LED控制</span>
+                                        <span class="badge badge-success">数字信号输出</span>
+                                    </div>
+                                </div>
+                                <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>Open-Drain (开漏输出)</strong>
+                                    <p>只能主动输出低电平，高电平需要外部上拉电阻。</p>
+                                    <div style="margin-top: 10px;">
+                                        <span class="badge badge-warning">高电平：依靠外部上拉</span>
+                                        <span class="badge badge-warning">低电平：主动拉低</span>
+                                    </div>
+                                    <div style="margin-top: 10px;">
+                                        <span class="badge badge-danger">I2C总线</span>
+                                        <span class="badge badge-danger">多设备共享总线</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="background-color: #e6f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                                <strong>配置提示：</strong> 对于一般的LED控制，选择<strong>Push-Pull</strong>输出类型。对于需要共享总线的场景（如I2C），选择<strong>Open-Drain</strong>输出类型。
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-speed':
+                        content = `
+                            <h3>GPIO Speed (输出速度)</h3>
+                            <p>决定GPIO引脚状态切换的速率和驱动能力。更高的速度设置意味着更快的电平切换速率和更强的电流驱动能力。</p>
+                            
+                            <div style="margin: 20px 0;">
+                                <table style="width:100%; border-collapse: collapse;">
+                                    <tr style="background-color: #f0f0f0;">
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">速度设置</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">最大频率</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">适用场景</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Low (低速)</td>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">~2MHz</td>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">低功耗应用、LED指示灯</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Medium (中速)</td>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">~10MHz</td>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">一般数字接口、按键控制</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">High (高速)</td>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">~50MHz</td>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">SPI通信、快速信号处理</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Very High (超高速)</td>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">~100MHz+</td>
+                                        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">高速通信接口、时钟信号</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div style="background-color: #e6f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                                <strong>配置提示：</strong> 对于普通LED控制，选择<strong>Low</strong>速度即可。更高的速度会增加功耗和电磁干扰，除非应用需要，否则不要选择过高的速度设置。
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-pull':
+                        content = `
+                            <h3>GPIO Pull-up/Pull-down (上拉/下拉电阻)</h3>
+                            <p>决定GPIO引脚在未被驱动时的默认状态。</p>
+                            
+                            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin: 20px 0;">
+                                <div style="flex: 1; min-width: 180px; padding: 15px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>No Pull-up/Pull-down</strong>
+                                    <p>不启用内部上拉/下拉电阻，引脚浮空。</p>
+                                    <div style="margin-top: 10px;">
+                                        <span class="badge badge-primary">模拟输入</span>
+                                        <span class="badge badge-primary">外部已有定义电平</span>
+                                    </div>
+                                </div>
+                                <div style="flex: 1; min-width: 180px; padding: 15px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>Pull-up (上拉)</strong>
+                                    <p>启用内部上拉电阻，引脚默认为高电平。</p>
+                                    <div style="margin-top: 10px;">
+                                        <span class="badge badge-success">按键检测</span>
+                                        <span class="badge badge-success">I2C总线</span>
+                                    </div>
+                                </div>
+                                <div style="flex: 1; min-width: 180px; padding: 15px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>Pull-down (下拉)</strong>
+                                    <p>启用内部下拉电阻，引脚默认为低电平。</p>
+                                    <div style="margin-top: 10px;">
+                                        <span class="badge badge-warning">上拉型开关检测</span>
+                                        <span class="badge badge-warning">默认低电平信号</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="background-color: #e6f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                                <strong>配置提示：</strong> 对于输出模式下的LED控制，通常选择<strong>No Pull-up/Pull-down</strong>。对于输入模式下的按键检测，建议选择<strong>Pull-up</strong>以防止引脚浮空。
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-label':
+                        content = `
+                            <h3>GPIO Label (引脚标签)</h3>
+                            <p>为GPIO引脚指定一个有意义的名称，方便在代码中引用。</p>
+                            
+                            <div style="margin: 20px 0;">
+                                <div style="padding: 15px; background-color: #f0f0f0; border-radius: 8px; margin-bottom: 15px;">
+                                    <strong>命名规范</strong>
+                                    <ul style="margin-top: 10px; padding-left: 20px;">
+                                        <li>使用有描述性的名称，如 LED_GREEN、BUTTON_USER</li>
+                                        <li>避免使用特殊字符，使用下划线分隔单词</li>
+                                        <li>保持命名一致性，便于代码维护</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="padding: 15px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>命名示例</strong>
+                                    <table style="width:100%; margin-top: 10px; border-collapse: collapse;">
+                                        <tr>
+                                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">功能</th>
+                                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">推荐标签名</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">LED指示灯</td>
+                                            <td style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">LED_RED, LED_GREEN, LED1, LED2</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">按键输入</td>
+                                            <td style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">BUTTON_USER, KEY1, KEY2</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">传感器控制</td>
+                                            <td style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">SENSOR_ENABLE, TEMP_ALERT</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div style="background-color: #e6f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                                <strong>配置提示：</strong> 合理命名GPIO引脚可以大大提高代码的可读性和可维护性。CubeMX会根据标签名自动生成相应的宏定义，方便在代码中使用。
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-signal':
+                    default:
+                        content = `
+                            <h3>GPIO Signal (引脚信号)</h3>
+                            <p>当GPIO配置为备用功能(Alternate Function)模式时，需要选择特定的信号类型。</p>
+                            
+                            <div style="margin: 20px 0;">
+                                <div style="padding: 20px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>常见的备用功能信号类型：</strong>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+                                        <span class="badge badge-primary">TIM1_CH1 (定时器通道)</span>
+                                        <span class="badge badge-primary">USART1_TX (串口发送)</span>
+                                        <span class="badge badge-primary">USART1_RX (串口接收)</span>
+                                        <span class="badge badge-primary">SPI1_SCK (SPI时钟)</span>
+                                        <span class="badge badge-primary">SPI1_MISO (SPI主入从出)</span>
+                                        <span class="badge badge-primary">SPI1_MOSI (SPI主出从入)</span>
+                                        <span class="badge badge-primary">I2C1_SCL (I2C时钟线)</span>
+                                        <span class="badge badge-primary">I2C1_SDA (I2C数据线)</span>
+                                        <span class="badge badge-primary">ADC1_IN0 (ADC输入通道)</span>
+                                        <span class="badge badge-primary">DAC1_OUT1 (DAC输出通道)</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 20px; padding: 20px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <strong>LED控制相关的信号类型：</strong>
+                                    <ul style="margin-top: 10px; padding-left: 20px;">
+                                        <li><strong>TIMx_CHx</strong> - 定时器PWM输出通道，用于控制LED亮度</li>
+                                        <li><strong>GPIO_Output</strong> - 普通GPIO输出，用于简单的LED开关控制</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div style="background-color: #e6f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                                <strong>配置提示：</strong> 要实现LED亮度调节（呼吸灯效果），应将GPIO配置为备用功能模式，并选择相应的定时器PWM通道信号。同时，需要在定时器配置中启用相应的PWM输出通道。
+                            </div>
+                        `;
+                }
+                
+                // 更新主内容区域
+                document.querySelector('.cubemx-main').innerHTML = `<div id="config-content" class="config-item">${content}</div>`;
+                
+                // 更新下方的详细说明卡片
+                let detailContent = '';
+                
+                switch(configId) {
+                    case 'gpio-mode':
+                        detailContent = `
+                            <div class="card-title">GPIO Mode (模式)</div>
+                            <div class="card-content">
+                                <p style="margin-bottom: 20px;">GPIO模式是配置引脚工作方式的基础，直接决定了引脚的电气行为和与内部/外部电路的交互方式。</p>
+                                
+                                <div style="padding: 20px; background-color: #ffffff; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                    <h3 style="margin-bottom: 15px; color: var(--dark-color); font-weight: 600;">四种核心模式详解:</h3>
+                                    <ul style="list-style: none; padding-left: 0;">
+                                        <li style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e5e5;">
+                                            <strong style="color: var(--primary-color);">输入模式 (Input Mode)</strong>
+                                            <p style="margin-top: 5px;">配置引脚为高阻态输入，用于读取外部数字信号电平。内部通常包含施密特触发器以整形输入信号，提高抗干扰能力。</p>
+                                            <p style="margin-top: 5px;"><small>可配置上拉/下拉电阻。常用于按键检测、外部传感器信号读取、与其他设备通信的接收端。</small></p>
+                                            <p style="margin-top: 5px;"><span class="badge badge-primary">EXTI中断</span> 可配置在此模式下。</p>
+                                        </li>
+                                        <li style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e5e5;">
+                                            <strong style="color: var(--success-color);">输出模式 (Output Mode)</strong>
+                                            <p style="margin-top: 5px;">配置引脚为输出，驱动外部电路。可以选择推挽(Push-Pull)或开漏(Open-Drain)输出类型，并可设置输出速度。</p>
+                                            <p style="margin-top: 5px;"><small>用于控制LED、驱动继电器、驱动蜂鸣器、与其他设备通信的发送端。</small></p>
+                                        </li>
+                                        <li style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e5e5;">
+                                            <strong style="color: var(--warning-color);">模拟模式 (Analog Mode)</strong>
+                                            <p style="margin-top: 5px;">配置引脚用于模拟信号处理，将引脚连接到内部模拟外设。此时，数字输入/输出缓冲器被禁用，以减少对模拟信号的干扰。</p>
+                                            <p style="margin-top: 5px;"><small>主要用于ADC（模数转换器）的输入通道或DAC（数模转换器）的输出通道。</small></p>
+                                            <p style="margin-top: 5px;"><span class="badge badge-warning">注意：</span>此模式下引脚呈高阻态，且上下拉电阻无效。</p>
+                                        </li>
+                                        <li>
+                                            <strong style="color: var(--highlight-color);">备用功能模式 (Alternate Function)</strong>
+                                            <p style="margin-top: 5px;">将引脚的控制权交给STM32内部集成的外设模块（如USART, SPI, I2C, TIM, CAN等）。</p>
+                                            <p style="margin-top: 5px;"><small>具体连接哪个外设的哪个信号，需要通过配置AFR寄存器（在CubeMX中通过选择Signal实现）。可以配置输出类型（推挽/开漏）和速度。</small></p>
+                                            <p style="margin-top: 5px;">这是实现复杂外设通信和功能的关键模式。</p>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="background-color: rgba(0, 113, 227, 0.05); padding: 20px; border-radius: 12px; margin: 30px 0; border-left: 5px solid var(--primary-color);">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 10px; font-weight: 600;">LED 控制场景选择</h3>
+                                    <ul style="margin-top: 10px; margin-left: 20px; list-style-type: disc;">
+                                        <li><strong>简单开关:</strong> 选择 <strong style="color: var(--success-color);">输出模式 (Output Mode)</strong>，通常配合推挽输出。</li>
+                                        <li><strong>亮度调节 (PWM):</strong> 选择 <strong style="color: var(--highlight-color);">备用功能模式 (Alternate Function)</strong>，并将Signal配置为相应的 <span class="badge badge-primary">TIMx_CHx</span> 定时器通道。</li>
+                                    </ul>
+                                </div>
+                                
+                                <h3 style="margin-top: 30px; font-weight: 600;">CubeMX 配置步骤</h3>
+                                <p>在CubeMX图形化界面中，左键点击目标引脚，在弹出的菜单中选择所需的GPIO模式。随后，根据所选模式，右侧的"Configuration"面板会显示更详细的配置选项（如Output Type, Speed, Pull-up/Pull-down, Signal, Label等）。</p>
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-output':
+                        detailContent = `
+                            <div class="card-title">GPIO Output Type (输出类型)</div>
+                            <div class="card-content">
+                                <p style="margin-bottom: 20px;">当GPIO配置为输出模式或备用功能输出时，输出类型决定了引脚驱动电路的结构和电气特性。</p>
+                                
+                                <div style="display: flex; flex-wrap: wrap; gap: 20px; margin: 20px 0;">
+                                    <div style="flex: 1; min-width: 300px; padding: 20px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                        <h4 style="margin-bottom: 10px; color: var(--primary-color); font-weight: 600;">推挽输出 (Push-Pull)</h4>
+                                        <p>内部包含一个PMOS和一个NMOS晶体管，分别连接到VDD和GND。</p>
+                                        <ul style="margin-left: 20px; margin-top: 10px; list-style-type: disc;">
+                                            <li><strong>强驱动:</strong> 可主动输出高电平（PMOS导通）和低电平（NMOS导通）。</li>
+                                            <li><strong>速度快:</strong> 电平切换迅速。</li>
+                                            <li><strong>源/灌电流:</strong> 既能提供电流（Source Current，输出高电平时），也能吸收电流（Sink Current，输出低电平时）。</li>
+                                            <li><strong>常用场景:</strong> 驱动LED、数字信号输出、高速通信接口。</li>
+                                            <li style="color: var(--danger-color);"><strong>注意:</strong> 不能将多个Push-Pull输出直接连接在一起，否则可能因电平冲突导致损坏。</li>
+                                        </ul>
+                                    </div>
+                                    <div style="flex: 1; min-width: 300px; padding: 20px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                        <h4 style="margin-bottom: 10px; color: var(--warning-color); font-weight: 600;">开漏输出 (Open-Drain)</h4>
+                                        <p>内部只包含一个NMOS晶体管连接到GND。</p>
+                                        <ul style="margin-left: 20px; margin-top: 10px; list-style-type: disc;">
+                                            <li><strong>仅拉低:</strong> 只能主动输出低电平（NMOS导通）。</li>
+                                            <li><strong>高阻态:</strong> 输出高电平时，NMOS截止，引脚呈高阻态。</li>
+                                            <li><strong>需上拉:</strong> 实现高电平输出必须依赖外部或内部的上拉电阻。</li>
+                                            <li><strong>"线与"逻辑:</strong> 多个开漏输出可以连接到同一条总线上，实现"线与"功能（只要有一个输出低，总线即为低）。</li>
+                                            <li><strong>电平转换:</strong> 可用于连接不同电压域的设备（通过上拉电阻连接到目标电压）。</li>
+                                            <li><strong>常用场景:</strong> I2C总线 (SCL, SDA)、SMBus、需要共享总线的信号。</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div style="background-color: rgba(0, 113, 227, 0.05); padding: 20px; border-radius: 12px; margin: 30px 0; border-left: 5px solid var(--primary-color);">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 10px; font-weight: 600;">LED 控制应用选择</h3>
+                                    <ul style="margin-top: 10px; margin-left: 20px; list-style-type: disc;">
+                                        <li><strong>首选推挽:</strong> 对于大多数直接驱动LED的应用，<strong style="color: var(--primary-color);">Push-Pull</strong> 提供更强的驱动能力和简单的控制逻辑（高电平亮或低电平亮，取决于电路设计）。</li>
+                                        <li><strong>特定场景开漏:</strong> 如果需要多个信号控制同一个LED，或者LED连接到不同电压域，可以考虑 <strong style="color: var(--warning-color);">Open-Drain</strong> 并配合外部上拉电阻。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-speed':
+                        detailContent = `
+                            <div class="card-title">GPIO Speed (输出速度)</div>
+                            <div class="card-content">
+                                <p style="margin-bottom: 20px;">GPIO速度设置主要影响输出模式下引脚电平切换的速率（Slew Rate）和驱动强度，进而影响功耗和电磁干扰（EMI）。</p>
+                                
+                                <div style="padding: 20px; background-color: #ffffff; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                    <h3 style="margin-bottom: 15px; color: var(--dark-color); font-weight: 600;">速度等级与特性:</h3>
+                                    <table style="width:100%; border-collapse: collapse; margin-top: 15px;">
+                                        <thead>
+                                            <tr style="background-color: #f5f5f7;">
+                                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">速度等级</th>
+                                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">大致频率范围</th>
+                                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">特点与应用</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Low (低速)</td>
+                                                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">~2 MHz</td>
+                                                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">最低功耗，最小EMI。适用于慢速信号，如LED指示灯、按键扫描、低速UART。</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Medium (中速)</td>
+                                                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">~10-25 MHz</td>
+                                                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">功耗和EMI适中。适用于I2C、中速SPI、中速UART等。</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">High (高速)</td>
+                                                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">~50-100 MHz</td>
+                                                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">功耗和EMI较高。适用于高速SPI、快速ADC接口、LCD接口等。对PCB布局和信号完整性有要求。</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 12px; text-align: left;">Very High (超高速)</td>
+                                                <td style="padding: 12px; text-align: left;">~100 MHz+</td>
+                                                <td style="padding: 12px; text-align: left;">最高功耗，最大EMI。适用于高速总线（如FSMC/FMC）、高速时钟输出、以太网接口等。需要仔细设计PCB。</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p style="margin-top: 15px;"><small>注意：实际最高工作频率受外部负载电容、电源电压、温度等多种因素影响。以上频率仅为典型参考。</small></p>
+                                </div>
+                                
+                                <div style="background-color: rgba(0, 113, 227, 0.05); padding: 20px; border-radius: 12px; margin: 30px 0; border-left: 5px solid var(--primary-color);">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 10px; font-weight: 600;">选择原则</h3>
+                                    <ul style="margin-top: 10px; margin-left: 20px; list-style-type: disc;">
+                                        <li><strong>满足需求即可:</strong> 选择满足应用所需最低速度等级，以降低功耗和EMI。</li>
+                                        <li><strong>LED 控制:</strong> 通常选择 <strong style="color: var(--primary-color);">Low (低速)</strong> 即可，除非是需要极快速闪烁的特殊应用。</li>
+                                        <li><strong>通信接口:</strong> 根据通信协议要求的最高速率选择，并留有一定余量。例如，SPI时钟速率为20MHz时，应选择支持该速率或更高速度的等级。</li>
+                                        <li><strong>信号完整性:</strong> 速度越高，越容易产生振铃、过冲等信号完整性问题，需要合理设计PCB布线（如缩短走线、增加地平面、考虑阻抗匹配）。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-pull':
+                        detailContent = `
+                            <div class="card-title">GPIO Pull-up/Pull-down (上拉/下拉)</div>
+                            <div class="card-content">
+                                <p style="margin-bottom: 20px;">配置GPIO引脚内部的上拉或下拉电阻，主要用于在引脚未被外部驱动时（如输入模式下浮空、开漏输出高阻态时）提供一个确定的默认电平状态。</p>
+                                
+                                <div style="padding: 20px; background-color: #ffffff; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                    <h3 style="margin-bottom: 15px; color: var(--dark-color); font-weight: 600;">三种配置选项:</h3>
+                                    <ul style="list-style: none; padding-left: 0;">
+                                        <li style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e5e5;">
+                                            <strong style="color: var(--gray-color);">无上拉/下拉 (No Pull-up/Pull-down / Floating)</strong>
+                                            <p style="margin-top: 5px;">不启用内部电阻。引脚处于高阻态（Hi-Z）。</p>
+                                            <p style="margin-top: 5px;"><small>适用于：模拟输入（避免影响模拟信号）、推挽输出（输出级已能确定电平）、外部已有明确上拉或下拉电路的情况。</small></p>
+                                            <p style="margin-top: 5px;"><span class="badge badge-danger">警告：</span>对于数字输入引脚，若外部无连接或连接的器件可能进入高阻态，配置为浮空可能导致输入电平不确定，增加功耗并可能引起逻辑错误。</p>
+                                        </li>
+                                        <li style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e5e5;">
+                                            <strong style="color: var(--success-color);">上拉 (Pull-up)</strong>
+                                            <p style="margin-top: 5px;">启用内部连接到VDD的上拉电阻（典型值约 30kΩ - 50kΩ）。</p>
+                                            <p style="margin-top: 5px;"><small>当引脚悬空或外部驱动为高阻态时，引脚被拉高到接近VDD电平。适用于：按键输入（按键按下接地，检测到低电平）、I2C总线（SCL/SDA需要上拉）、需要默认高电平的输入信号。</small></p>
+                                        </li>
+                                        <li>
+                                            <strong style="color: var(--warning-color);">下拉 (Pull-down)</strong>
+                                            <p style="margin-top: 5px;">启用内部连接到GND的下拉电阻（典型值约 30kΩ - 50kΩ）。</p>
+                                            <p style="margin-top: 5px;"><small>当引脚悬空或外部驱动为高阻态时，引脚被拉低到接近GND电平。适用于：需要默认低电平的输入信号、某些总线协议。</small></p>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="background-color: rgba(0, 113, 227, 0.05); padding: 20px; border-radius: 12px; margin: 30px 0; border-left: 5px solid var(--primary-color);">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 10px; font-weight: 600;">LED 控制与上下拉</h3>
+                                    <ul style="margin-top: 10px; margin-left: 20px; list-style-type: disc;">
+                                        <li><strong>推挽输出控制LED:</strong> 通常选择 <strong style="color: var(--gray-color);">No Pull-up/Pull-down</strong>，因为推挽输出本身就能强制输出高低电平。</li>
+                                        <li><strong>开漏输出控制LED:</strong> 需要 <strong style="color: var(--warning-color);">外部</strong> 上拉电阻将引脚拉高以点亮LED（假设LED另一端接GND），此时内部上下拉通常禁用或根据具体电路分析。</li>
+                                        <li><strong>按键输入控制LED:</strong> 如果用一个按键输入引脚的状态来间接控制LED，该输入引脚应根据按键电路配置上拉或下拉（如按键接GND，则配置上拉）。</li>
+                                    </ul>
+                                    <p style="margin-top: 10px;"><small>注意：内部上下拉电阻阻值较大，提供的电流很小（微安级别），不能用于直接驱动LED等负载，仅用于确定信号电平。</small></p>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-label':
+                        detailContent = `
+                            <div class="card-title">GPIO Label (用户标签)</div>
+                            <div class="card-content">
+                                <p style="margin-bottom: 20px;">用户标签 (User Label) 是在CubeMX中为GPIO引脚分配的一个自定义、有意义的名称。这个标签会被CubeMX用于自动生成代码中的宏定义，极大提高代码的可读性和可维护性。</p>
+                                
+                                <div style="padding: 20px; background-color: #ffffff; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                    <h3 style="margin-bottom: 15px; color: var(--dark-color); font-weight: 600;">命名最佳实践:</h3>
+                                    <ul style="list-style: none; padding-left: 0;">
+                                        <li style="margin-bottom: 10px;">
+                                            <strong style="color: var(--primary-color);">清晰描述性:</strong> 名称应能清晰反映引脚的功能或连接的外部设备。
+                                            <p><small>例如：<code>LED_STATUS</code>, <code>BUTTON_USER</code>, <code>SPI1_CS</code>, <code>MOTOR_DIR</code></small></p>
+                                        </li>
+                                        <li style="margin-bottom: 10px;">
+                                            <strong style="color: var(--primary-color);">一致性:</strong> 项目中保持统一的命名风格。
+                                            <p><small>例如：所有LED都以 <code>LED_</code> 开头，所有按键以 <code>BTN_</code> 或 <code>KEY_</code> 开头。</small></p>
+                                        </li>
+                                        <li style="margin-bottom: 10px;">
+                                            <strong style="color: var(--primary-color);">格式规范:</strong>
+                                            <ul style="margin-left: 20px; margin-top: 5px; list-style-type: disc;">
+                                                <li>建议使用大写字母和下划线 (<code>UPPER_SNAKE_CASE</code>)。</li>
+                                                <li>避免使用特殊字符和空格。</li>
+                                                <li>避免仅使用端口和引脚号作为标签 (如 <code>PC13</code>)，这失去了标签的意义。</li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <strong style="color: var(--primary-color);">简洁性:</strong> 在清晰的前提下，尽量保持简洁。
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="background-color: rgba(40, 205, 65, 0.05); padding: 20px; border-radius: 12px; margin: 30px 0; border-left: 5px solid var(--success-color);">
+                                    <h3 style="color: var(--success-color); margin-bottom: 10px; font-weight: 600;">对代码生成的影响</h3>
+                                    <p>假设你在CubeMX中将 PC13 引脚的用户标签设置为 <code>LED_BUILTIN</code>，那么在生成的 <code>main.h</code> (或相关头文件) 中，通常会包含类似以下的宏定义：</p>
+                                    <pre style="background-color: #f0f0f0; padding: 15px; border-radius: 8px; overflow-x: auto; margin-top: 10px; font-family: monospace;"><code>#define LED_BUILTIN_Pin GPIO_PIN_13\n#define LED_BUILTIN_GPIO_Port GPIOC</code></pre>
+                                    <p style="margin-top: 10px;">这样，在你的C代码中，就可以使用这些有意义的宏来操作GPIO，而不是硬编码端口和引脚号：</p>
+                                    <pre style="background-color: #f0f0f0; padding: 15px; border-radius: 8px; overflow-x: auto; margin-top: 10px; font-family: monospace;"><code>// 翻转LED状态\nHAL_GPIO_TogglePin(LED_BUILTIN_GPIO_Port, LED_BUILTIN_Pin);</code></pre>
+                                    <p style="margin-top: 10px;">这使得代码更易于理解、修改和移植。</p>
+                                </div>
+                                
+                                <h3 style="margin-top: 30px; font-weight: 600;">LED 控制标签示例</h3>
+                                <ul style="margin-top: 10px; margin-left: 20px; list-style-type: disc;">
+                                    <li>单色LED: <code>LED_POWER</code>, <code>LED_STATUS_GREEN</code>, <code>LED_ERROR_RED</code>, <code>LED1</code>, <code>LED2</code></li>
+                                    <li>RGB LED: <code>RGB_RED</code>, <code>RGB_GREEN</code>, <code>RGB_BLUE</code></li>
+                                </ul>
+                            </div>
+                        `;
+                        break;
+                    
+                    case 'gpio-signal':
+                    default:
+                        detailContent = `
+                            <div class="card-title">GPIO Signal (引脚信号/备用功能)</div>
+                            <div class="card-content">
+                                <p style="margin-bottom: 20px;">当GPIO模式配置为 <strong style="color: var(--highlight-color);">备用功能 (Alternate Function)</strong> 时，"Signal" 选项用于指定该引脚连接到STM32内部的哪个外设的哪个具体信号。</p>
+                                
+                                <div style="padding: 20px; background-color: #ffffff; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                    <h3 style="margin-bottom: 15px; color: var(--dark-color); font-weight: 600;">备用功能复用 (AF Multiplexing):</h3>
+                                    <p>STM32的每个GPIO引脚通常可以复用为多个不同的外设信号。例如，一个引脚可能既可以作为USART1的TX，也可以作为TIM2的通道3，还可以作为SPI3的MOSI。</p>
+                                    <p style="margin-top: 10px;">通过在CubeMX的"Signal"下拉列表中选择，或者直接在代码中配置GPIO的 <code style="background: #f0f0f0; padding: 2px 5px; border-radius: 4px;">Alternate</code> 字段（使用HAL库时），可以决定该引脚当前连接到哪个外设信号。</p>
+                                    <p style="margin-top: 10px;">这种复用机制允许在有限的引脚数量上实现丰富的外设功能，但也要求开发者仔细查阅芯片的数据手册 (Datasheet) 来确认引脚的可用备用功能映射。</p>
+                                </div>
+                                
+                                <div style="padding: 20px; background-color: #ffffff; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                    <h3 style="margin-bottom: 15px; color: var(--dark-color); font-weight: 600;">常见信号类型示例:</h3>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+                                        <span class="badge badge-primary">TIMx_CHx (定时器通道)</span>
+                                        <span class="badge badge-primary">TIMx_ETR (外部触发)</span>
+                                        <span class="badge badge-primary">TIMx_BKIN (刹车输入)</span>
+                                        <span class="badge badge-primary">USARTx_TX (串口发送)</span>
+                                        <span class="badge badge-primary">USARTx_RX (串口接收)</span>
+                                        <span class="badge badge-primary">USARTx_CK (同步时钟)</span>
+                                        <span class="badge badge-primary">USARTx_CTS (流控)</span>
+                                        <span class="badge badge-primary">USARTx_RTS (流控)</span>
+                                        <span class="badge badge-primary">I2Cx_SCL (I2C时钟)</span>
+                                        <span class="badge badge-primary">I2Cx_SDA (I2C数据)</span>
+                                        <span class="badge badge-primary">SPIx_SCK (SPI时钟)</span>
+                                        <span class="badge badge-primary">SPIx_MISO (主入从出)</span>
+                                        <span class="badge badge-primary">SPIx_MOSI (主出从入)</span>
+                                        <span class="badge badge-primary">SPIx_NSS (片选)</span>
+                                        <span class="badge badge-primary">I2Sx_CK (I2S时钟)</span>
+                                        <span class="badge badge-primary">I2Sx_WS (字选)</span>
+                                        <span class="badge badge-primary">I2Sx_SD (串行数据)</span>
+                                        <span class="badge badge-primary">CANx_TX (CAN发送)</span>
+                                        <span class="badge badge-primary">CANx_RX (CAN接收)</span>
+                                        <span class="badge badge-primary">USB_OTG_FS/HS_...</span>
+                                        <span class="badge badge-primary">ETH_... (以太网)</span>
+                                        <span class="badge badge-primary">SDMMCx_... (SD卡)</span>
+                                        <span class="badge badge-primary">QUADSPI_... (QSPI)</span>
+                                        <span class="badge badge-warning">SYS_... (系统功能, 如SWD, JTAG)</span>
+                                        <span class="badge badge-warning">RCC_... (时钟输出, 如MCO)</span>
+                                        <span class="badge badge-warning">EVENTOUT (事件输出)</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="background-color: rgba(0, 113, 227, 0.05); padding: 20px; border-radius: 12px; margin: 30px 0; border-left: 5px solid var(--primary-color);">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 10px; font-weight: 600;">LED 亮度控制 (PWM)</h3>
+                                    <p>要通过PWM实现LED亮度控制或呼吸灯效果：</p>
+                                    <ol style="margin-top: 10px; margin-left: 20px; list-style-type: decimal;">
+                                        <li>将目标GPIO引脚的模式设置为 <strong style="color: var(--highlight-color);">Alternate Function Push-Pull</strong> (通常推挽输出效果更好)。</li>
+                                        <li>在 "Signal" 下拉列表中，选择一个可用的 <strong style="color: var(--primary-color);">TIMx_CHx</strong> (定时器通道) 信号。</li>
+                                        <li>转到对应的 <strong style="color: var(--primary-color);">TIMx</strong> 外设配置界面。</li>
+                                        <li>配置定时器的时钟源和预分频器(Prescaler)、自动重载寄存器(ARR)以设定PWM频率。</li>
+                                        <li>启用所选的 <strong style="color: var(--primary-color);">Channel x</strong>，并将其模式设置为 <strong style="color: var(--success-color);">PWM Generation CHx</strong>。</li>
+                                        <li>配置比较寄存器(CCR / Pulse)的值来控制PWM占空比，从而控制LED亮度。</li>
+                                    </ol>
+                                    <p style="margin-top: 10px;"><span class="badge badge-danger">重要提示：</span>务必查阅STM32芯片的数据手册（查找 "Alternate function mapping" 相关表格），确认所选引脚支持你想要连接的定时器通道。并非所有引脚都支持所有定时器的所有通道。</p>
+                                </div>
+                            </div>
+                        `;
+                }
+                
+                // 更新详细说明卡片
+                document.querySelector('.card').innerHTML = detailContent;
+            });
+        });
+        
+        // 页面加载时自动选中并显示第一个选项 (GPIO Mode)
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取第一个菜单项
+            const firstMenuItem = document.querySelector('#config-menu li[data-config="gpio-mode"]');
+            // 触发其点击事件
+            if (firstMenuItem) {
+                firstMenuItem.click();
+            }
+        });
+    </script>
+</body>
+</html>

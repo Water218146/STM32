@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STM32 SPI 配置指南 - 米醋电子工作室</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0071e3; /* 蓝色主调 */
+            --secondary-color: #69c0ff; /* 浅蓝色 */
+            --dark-color: #1d1d1f; /* 深灰色文字 */
+            --light-color: #f5f5f7; /* 浅灰色背景 */
+            --success-color: #28a745; /* 绿色成功 */
+            --warning-color: #ffc107; /* 黄色警告 */
+            --danger-color: #dc3545; /* 红色危险 */
+            --gray-color: #6c757d; /* 中灰色 */
+            --highlight-color: #17a2b8; /* 青色高亮 */
+            --border-color: #dee2e6; /* 边框颜色 */
+            --card-background: #ffffff; /* 卡片背景 */
+            --secondary-background-color: #e9ecef; /* 次级背景 */
+            --border-radius: 10px; /* 圆角大小 */
+            --box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* 阴影 */
+             --font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.7; 
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 25px; 
+        }
+
+        header {
+            background-color: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(15px); 
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color); 
+            box-shadow: var(--box-shadow);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0; 
+        }
+
+        .logo {
+            font-size: 22px; 
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        h1 {
+            font-size: 32px; 
+            font-weight: 700;
+            margin-bottom: 25px;
+            background: linear-gradient(90deg, var(--primary-color), var(--highlight-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            padding: 35px 0;
+        }
+
+        h2 {
+            font-size: 26px; 
+            font-weight: 600;
+            margin: 35px 0 20px;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color); 
+            padding-bottom: 8px; 
+        }
+
+        .cubemx-config {
+            display: grid;
+            grid-template-columns: 300px 1fr; 
+            gap: 25px; 
+            margin: 30px 0;
+        }
+
+        .cubemx-sidebar {
+            background-color: var(--card-background); 
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            position: sticky; 
+            top: 90px; 
+            align-self: start; 
+            max-height: calc(100vh - 120px); 
+            overflow-y: auto; 
+        }
+         .cubemx-sidebar h2 {
+             margin-top: 0; 
+             font-size: 20px; 
+             border-bottom: 1px solid var(--border-color);
+             padding-bottom: 10px;
+             margin-bottom: 15px;
+         }
+        .cubemx-sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .cubemx-sidebar li {
+            padding: 12px 15px; 
+            cursor: pointer;
+            border-radius: calc(var(--border-radius) * 0.8); 
+            margin-bottom: 6px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            font-size: 15px; 
+            font-weight: 500;
+            color: var(--dark-color); 
+        }
+         .cubemx-sidebar li:hover {
+             background-color: var(--light-color); 
+         }
+        .cubemx-sidebar li.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .cubemx-main {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            min-height: 200px; 
+        }
+        .cubemx-main h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px; 
+            color: var(--dark-color);
+        }
+         .cubemx-main p {
+             margin-bottom: 15px;
+             font-size: 15px;
+             color: var(--gray-color);
+         }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px 35px; 
+            margin-bottom: 35px;
+            overflow: hidden;
+        }
+
+        .card-title {
+            font-size: 24px; 
+            font-weight: 600;
+            margin-bottom: 20px; 
+            color: var(--primary-color);
+            display: flex; 
+            align-items: center;
+        }
+        .card-title .fas { 
+            margin-right: 12px;
+            font-size: 1.1em; 
+            color: var(--secondary-color); 
+        }
+
+        .card-content {
+            font-size: 16px;
+            color: var(--dark-color);
+        }
+
+        .card-content h3 { 
+            font-size: 20px;
+            font-weight: 600;
+            margin: 25px 0 12px;
+            color: var(--dark-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .card-content h4 { 
+            font-size: 18px;
+            font-weight: 600;
+            margin: 20px 0 10px;
+            color: var(--primary-color);
+        }
+
+        .card-content ul:not(.fa-ul) { 
+            padding-left: 25px;
+            margin-bottom: 18px;
+            list-style-type: disc; 
+        }
+        .card-content ol { 
+             padding-left: 25px;
+             margin-bottom: 18px;
+        }
+         .card-content li { 
+             margin-bottom: 8px;
+         }
+
+        .card-content .fa-ul { 
+            list-style-type: none;
+            margin-left: 0;
+            padding-left: 0;
+             margin-bottom: 18px;
+        }
+
+        .card-content .fa-ul li {
+            padding-left: 2.5em;
+            position: relative;
+            margin-bottom: 10px; 
+        }
+
+        .card-content .fa-li {
+            left: 0;
+            width: 2em;
+            text-align: center;
+            position: absolute;
+            line-height: inherit;
+            color: var(--primary-color); 
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px; 
+            border-radius: 20px;
+            font-size: 13px; 
+            font-weight: 500;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            border: 1px solid transparent; 
+        }
+
+        
+        .badge-primary { background-color: #e7f3ff; color: #005ecc; border-color: #b8daff; }
+        .badge-success { background-color: #eaf7ec; color: #218838; border-color: #c3e6cb; }
+        .badge-warning { background-color: #fff8e1; color: #b97d10; border-color: #ffeeba; }
+        .badge-danger { background-color: #fbebec; color: #c82333; border-color: #f5c6cb; }
+        .badge-gray { background-color: #f1f3f5; color: #495057; border-color: #ced4da; }
+        .badge-highlight { background-color: #e8f7fa; color: #138496; border-color: #bee5eb; }
+        .badge-info { background-color: #e8f7fa; color: #138496; border-color: #bee5eb; } 
+
+        .config-item { 
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+        }
+
+        .config-item:last-child {
+            border-bottom: none;
+        }
+
+        .config-tip { 
+            background-color: #e7f3ff; 
+            border: 1px solid #b8daff; 
+            border-left: 5px solid var(--primary-color); 
+            padding: 18px 25px; 
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+            font-size: 15px; 
+            line-height: 1.6;
+        }
+         .config-tip i.fas { 
+             margin-right: 8px;
+             color: var(--primary-color);
+         }
+        .config-tip strong {
+             font-weight: 600;
+             color: var(--primary-color);
+        }
+
+        .config-tip ul {
+            margin-top: 12px;
+            padding-left: 20px;
+            list-style-type: disc;
+        }
+
+        
+        .text-success { color: var(--success-color); }
+        .text-danger { color: var(--danger-color); }
+        .text-warning { color: var(--warning-color); }
+        .text-primary { color: var(--primary-color); }
+        .text-info { color: var(--highlight-color); }
+        .text-gray { color: var(--gray-color); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+            border-radius: var(--border-radius); 
+            overflow: hidden; 
+        }
+        th, td {
+            padding: 14px 18px; 
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 15px; 
+        }
+        th {
+            background-color: var(--light-color); 
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+         tbody tr:last-child td {
+             border-bottom: none; 
+         }
+         tbody tr:hover {
+            background-color: #f8f9fa; 
+         }
+
+        footer {
+            background-color: var(--dark-color);
+            color: var(--light-color); 
+            padding: 35px 0;
+            text-align: center;
+            margin-top: 50px; 
+        }
+
+        .copyright {
+            font-size: 14px;
+            color: var(--gray-color);
+            margin-top: 15px;
+        }
+        .copyright a {
+            color: var(--secondary-color); 
+            text-decoration: none;
+        }
+         .copyright a:hover {
+             text-decoration: underline;
+         }
+
+        pre {
+            background-color: #282c34; 
+            color: #abb2bf; 
+            padding: 18px;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+            margin: 15px 0; 
+            font-family: 'SF Mono', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        code:not(pre code) { 
+             background: #e9ecef; 
+             color: #c7254e; 
+             padding: 3px 6px;
+             border-radius: 4px;
+             font-family: 'SF Mono', Consolas, 'Courier New', monospace;
+             font-size: 0.9em;
+             border: 1px solid #ced4da;
+        }
+        pre code.hljs { 
+            background: none; 
+            padding: 0;
+        }
+
+        .sub-section { 
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            background-color: #f8f9fa; 
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .sub-section:last-child {
+            margin-bottom: 0; 
+        }
+
+        .sub-section h4 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd; 
+            padding-bottom: 10px;
+            margin-bottom: 18px;
+            color: var(--dark-color); 
+            font-size: 17px; 
+        }
+         .sub-section h4 .fas { 
+             margin-right: 8px;
+             color: var(--primary-color);
+         }
+
+        
+        @media (max-width: 992px) { 
+            .cubemx-config {
+                grid-template-columns: 250px 1fr; 
+            }
+        }
+
+        @media (max-width: 768px) { 
+            .cubemx-config {
+                grid-template-columns: 1fr; 
+            }
+             .cubemx-sidebar {
+                 position: static; 
+                 max-height: none; 
+                 margin-bottom: 25px;
+             }
+            h1 { font-size: 28px; padding: 25px 0;}
+            h2 { font-size: 22px; }
+            .card { padding: 25px 20px; }
+            .card-title { font-size: 20px; }
+             .card-content h3 { font-size: 18px; }
+             .card-content h4 { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">米醋电子工作室</div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>STM32 SPI 配置指南</h1>
+
+        <div class="cubemx-config">
+            <aside class="cubemx-sidebar">
+                <h2>SPI 配置选项</h2>
+                <ul id="config-menu">
+                </ul>
+            </aside>
+
+            <main class="cubemx-main">
+                <div id="config-content" class="config-item">
+                    <p>请在左侧选择一个配置项以查看简要信息。</p>
+                </div>
+            </main>
+        </div>
+
+        <section class="card" id="detail-card">
+             <div class="card-title"><i class="fas fa-info-circle"></i>详细说明</div>
+             <div class="card-content"><p>请在左侧选择一个配置项以查看详细说明。</p></div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="copyright">
+                 © 2024 米醋电子工作室. 保留所有权利. | <a href="#top">回到顶部</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const spiConfigs = [
+            { id: 'spi-mode', name: 'SPI: 模式选择', icon: 'fa-network-wired' },
+            { id: 'spi-data-frame', name: 'SPI: 数据与帧格式', icon: 'fa-file-alt' },
+            { id: 'spi-clock', name: 'SPI: 时钟配置', icon: 'fa-tachometer-alt' },
+            { id: 'spi-nss', name: 'SPI: NSS 管理', icon: 'fa-toggle-on' },
+            { id: 'spi-crc', name: 'SPI: CRC 计算', icon: 'fa-shield-alt' },
+            { id: 'spi-dma', name: 'SPI: DMA 配置', icon: 'fa-truck' },
+            { id: 'spi-interrupts', name: 'SPI: 中断配置 (NVIC)', icon: 'fa-bell' },
+            { id: 'spi-gpio', name: 'SPI: GPIO 配置', icon: 'fa-th-large' },
+        ];
+
+        const configMenu = document.getElementById('config-menu');
+        const mainContent = document.getElementById('config-content');
+        const detailCard = document.getElementById('detail-card');
+
+        spiConfigs.forEach(config => {
+            const li = document.createElement('li');
+            li.setAttribute('data-config', config.id);
+            const icon = document.createElement('i');
+            icon.className = `fas ${config.icon} fa-fw`;
+            icon.style.marginRight = '10px';
+            li.appendChild(icon);
+            li.appendChild(document.createTextNode(config.name));
+            li.addEventListener('click', () => handleMenuClick(config.id, li));
+            configMenu.appendChild(li);
+        });
+
+        function handleMenuClick(configId, clickedItem) {
+            document.querySelectorAll('#config-menu li').forEach(i => i.classList.remove('active'));
+            clickedItem.classList.add('active');
+            mainContent.innerHTML = getMainContent(configId);
+            detailCard.innerHTML = getDetailContent(configId);
+            document.querySelectorAll('#detail-card pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+             // Scroll to the detail card for better visibility, especially on smaller screens
+            const detailCardElement = document.getElementById('detail-card');
+            if (detailCardElement) {
+                detailCardElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function getMainContent(configId) {
+            const config = spiConfigs.find(c => c.id === configId);
+            if (!config) return '<p>未找到配置项。</p>';
+
+            let briefInfo = '';
+            switch(configId) {
+                case 'spi-mode': briefInfo = '选择 SPI 的工作模式 (主/从, 全双工/半双工/接收模式)。'; break;
+                case 'spi-data-frame': briefInfo = '配置 SPI 数据帧格式，包括数据大小、MSB/LSB优先、帧格式。'; break;
+                case 'spi-clock': briefInfo = '配置 SPI 通信速率 (波特率) 和时钟极性/相位。'; break;
+                case 'spi-nss': briefInfo = '配置 NSS (从设备选择) 信号的管理方式 (硬件/软件) 和极性。'; break;
+                case 'spi-crc': briefInfo = '启用和配置 SPI 的 CRC 校验功能以增强数据完整性。'; break;
+                case 'spi-dma': briefInfo = '配置 DMA 通道以自动传输 SPI 数据，提高效率。'; break;
+                case 'spi-interrupts': briefInfo = '启用或禁用 SPI 事件和错误中断。'; break;
+                case 'spi-gpio': briefInfo = '配置 SPI 使用的 MOSI, MISO, SCK, NSS 引脚的 GPIO 功能。'; break;
+                default: briefInfo = '选择配置项查看信息。';
+            }
+
+            return `
+                <h3>${config.name}</h3>
+                <p>${briefInfo}</p>
+                <div class="config-tip">
+                    <i class="fas fa-info-circle"></i> 详细配置方法请参见下方的说明卡片。
+                </div>`;
+        }
+
+        function getDetailContent(configId) {
+             const config = spiConfigs.find(c => c.id === configId);
+             if (!config) return '<div class="card-title"><i class="fas fa-exclamation-circle"></i>错误</div><div class="card-content"><p>无法加载配置项信息。</p></div>';
+
+             let content = `<div class="card-title"><i class="fas ${config.icon}"></i>${config.name}</div><div class="card-content" style="padding-top: 10px;">`;
+
+             switch(configId) {
+                 case 'spi-mode': content += `
+                     <p>SPI 模式选择决定了 STM32 在 SPI 总线上扮演的角色以及数据传输的基本方式。</p>
+                     <div class="sub-section">
+                         <h4><i class="fas fa-project-diagram"></i> 传输模式 (Transmission Mode)</h4>
+                         <p>在 CubeMX 的 "Mode" 下拉菜单中选择 SPI 外设的工作模式。</p>
+                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-primary">Full-Duplex Master</span>
+                             <span class="badge badge-info">Full-Duplex Slave</span>
+                             <span class="badge badge-success">Half-Duplex Master</span>
+                             <span class="badge badge-highlight">Half-Duplex Slave</span>
+                             <span class="badge badge-gray">Receive Only Master</span>
+                             <span class="badge badge-gray">Receive Only Slave</span>
+                             <span class="badge badge-danger">Disabled</span>
+                         </div>
+                         <ul>
+                             <li><strong>Full-Duplex Master/Slave:</strong> <span class="badge badge-success">最常用</span> 全双工模式，数据在 MOSI 和 MISO 上同时双向传输。主机发起通信并提供时钟。</li>
+                             <li><strong>Half-Duplex Master/Slave:</strong> 半双工模式，数据通过单根线 (MOSI 或 MISO，具体取决于配置和主从角色) 进行双向传输，但不能同时进行。需要正确配置 GPIO 复用和可能的外部连线。</li>
+                             <li><strong>Receive Only Master/Slave:</strong> 只接收模式。主机模式下，主机仅通过 MISO 接收数据 (不发送)。从机模式下，从机仅通过 MOSI 接收数据。</li>
+                             <li><strong>Disabled:</strong> 禁用该 SPI 外设。</li>
+                         </ul>
+                         <p><strong>配置建议:</strong> 绝大多数 SPI 外设 (如 Flash, ADC, DAC, 传感器) 使用 <strong>Full-Duplex Master</strong> 模式。如果 STM32 作为 SPI 从设备，则选择 <strong>Full-Duplex Slave</strong>。</p>
+                     </div>
+                     <div class="config-tip">
+                        <i class="fas fa-lightbulb"></i> <strong>核心选择:</strong> 根据应用需求选择正确的 SPI 角色 (Master/Slave) 和数据传输方式 (Full-Duplex 是主流)。
+                     </div>
+                 `; break;
+                 case 'spi-data-frame': content += `
+                    <p>配置 SPI 传输中每一帧数据的具体格式。</p>
+                    <div class="sub-section">
+                        <h4><i class="fas fa-ruler-combined"></i> 帧格式 (Frame Format)</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-success">Motorola</span>
+                             <span class="badge badge-gray">TI</span>
+                         </div>
+                        <ul>
+                            <li><strong>Motorola:</strong> <span class="badge badge-success">最常用</span> 标准的 SPI 帧格式，数据在时钟边沿变化和采样，NSS 信号在帧之间控制。</li>
+                            <li><strong>TI:</strong> TI 同步串行帧格式，在 NSS 信号有效期间会产生一个时钟脉冲用于同步，数据传输方式与 Motorola 类似。使用较少，除非外设明确要求。</li>
+                        </ul>
+                        <p><strong>配置建议:</strong> 绝大多数情况选择 <strong>Motorola</strong>。</p>
+                    </div>
+                     <div class="sub-section">
+                        <h4><i class="fas fa-text-width"></i> 数据大小 (Data Size)</h4>
+                        <p>设置每个 SPI 帧传输的数据位数。</p>
+                        <p>通常可选范围从 <code>4 bits</code> 到 <code>16 bits</code> (具体范围取决于 STM32 型号)。</p>
+                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-primary">8 Bits</span>
+                             <span class="badge badge-info">16 Bits</span>
+                             <span class="badge badge-gray">4 Bits ... 7 Bits, 9 Bits ... 15 Bits</span>
+                         </div>
+                        <p><strong>配置建议:</strong> <strong>8 Bits</strong> 是最常见的数据大小。如果外设使用16位寄存器或数据，可以选择 <strong>16 Bits</strong> 以提高效率。小于8位的情况较少见。</p>
+                    </div>
+                     <div class="sub-section">
+                        <h4><i class="fas fa-sort-numeric-down"></i> 位顺序 (First Bit)</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-success">MSB First</span>
+                             <span class="badge badge-gray">LSB First</span>
+                         </div>
+                        <ul>
+                            <li><strong>MSB First:</strong> <span class="badge badge-success">最常用</span> 最高有效位 (Most Significant Bit) 先发送。</li>
+                            <li><strong>LSB First:</strong> 最低有效位 (Least Significant Bit) 先发送。</li>
+                        </ul>
+                        <p><strong>配置建议:</strong> 查阅从设备数据手册，绝大多数 SPI 设备使用 <strong>MSB First</strong>。</p>
+                    </div>
+                    <div class="config-tip">
+                        <i class="fas fa-exclamation-triangle text-warning"></i> <strong>务必匹配:</strong> 帧格式、数据大小和位顺序必须与 SPI 从设备的要求完全一致，否则会导致数据解析错误。
+                    </div>
+                 `; break;
+                 case 'spi-clock': content += `
+                    <p>配置 SPI 的 SCK 时钟频率 (波特率) 和时钟模式 (极性 CPOL 与相位 CPHA)。</p>
+                    <div class="sub-section">
+                        <h4><i class="fas fa-tachometer-alt"></i> 波特率预分频器 (Prescaler for Baud Rate)</h4>
+                        <p>通过选择一个预分频值来设置 SPI 的通信速率。SPI 时钟由连接到 SPI 外设的总线时钟 (通常是 APB1 或 APB2 时钟) 分频得到。</p>
+                        <p><code>SPI_CLK = Peripheral_Clock / Prescaler_Value</code></p>
+                        <p>CubeMX 会显示可选的预分频值 (如 2, 4, 8, 16, ..., 256) 以及基于当前外设时钟计算出的实际波特率。</p>
+                        <p><strong>配置建议:</strong></p>
+                        <ul>
+                            <li>首先，查阅从设备数据手册，确定其支持的最大 SPI 时钟频率。</li>
+                            <li>选择一个预分频值，使得计算出的 SPI 时钟速率<strong>不超过</strong>从设备的最大限制。</li>
+                            <li>初次调试时，可以从一个较低的速率开始 (例如选择较大的预分频值)，通信稳定后再逐步提高速率。</li>
+                        </ul>
+                    </div>
+                     <div class="sub-section">
+                        <h4><i class="fas fa-wave-square"></i> 时钟极性 (Clock Polarity - CPOL)</h4>
+                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-primary">Low</span>
+                             <span class="badge badge-info">High</span>
+                         </div>
+                        <ul>
+                            <li><strong>CPOL = Low:</strong> SCK 时钟在空闲状态为低电平。</li>
+                            <li><strong>CPOL = High:</strong> SCK 时钟在空闲状态为高电平。</li>
+                        </ul>
+                    </div>
+                     <div class="sub-section">
+                        <h4><i class="fas fa-columns"></i> 时钟相位 (Clock Phase - CPHA)</h4>
+                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-primary">1 Edge (First Edge)</span>
+                             <span class="badge badge-info">2 Edge (Second Edge)</span>
+                         </div>
+                        <ul>
+                            <li><strong>CPHA = 1 Edge:</strong> 数据在 SCK 的第一个时钟边沿被采样。</li>
+                            <li><strong>CPHA = 2 Edge:</strong> 数据在 SCK 的第二个时钟边沿被采样。</li>
+                        </ul>
+                    </div>
+                    <div class="sub-section" style="background-color: #f8f9fa;">
+                        <h4><i class="fas fa-project-diagram"></i> SPI 模式总结 (CPOL/CPHA)</h4>
+                        <p>CPOL 和 CPHA 的组合定义了四种 SPI 工作模式：</p>
+                        <table>
+                            <thead><tr><th>模式</th><th>CPOL</th><th>CPHA</th><th>描述 (空闲电平, 采样边沿)</th></tr></thead>
+                            <tbody>
+                                <tr><td>0</td><td>Low (0)</td><td>1 Edge (0)</td><td>空闲低，SCK 第一个边沿采样</td></tr>
+                                <tr><td>1</td><td>Low (0)</td><td>2 Edge (1)</td><td>空闲低，SCK 第二个边沿采样</td></tr>
+                                <tr><td>2</td><td>High (1)</td><td>1 Edge (0)</td><td>空闲高，SCK 第一个边沿采样</td></tr>
+                                <tr><td>3</td><td>High (1)</td><td>2 Edge (1)</td><td>空闲高，SCK 第二个边沿采样</td></tr>
+                            </tbody>
+                        </table>
+                         <p><i class="fas fa-exclamation-triangle text-danger"></i> <strong>重要:</strong> 必须查阅从设备的数据手册，选择其支持的 SPI 模式。例如，许多 SPI Flash 支持模式 0 和模式 3。</p>
+                    </div>
+                    <div class="config-tip">
+                        <i class="fas fa-lightbulb"></i> <strong>核心配置:</strong> 波特率、CPOL 和 CPHA 是 SPI 通信成功的基础。任何一项与从设备不匹配都将导致通信失败。
+                    </div>
+                 `; break;
+                 case 'spi-nss': content += `
+                    <p>NSS (Negative Slave Select) 或 CS (Chip Select) 信号用于选择与之通信的从设备。STM32 SPI 外设提供了硬件和软件两种管理方式。</p>
+                     <div class="sub-section">
+                        <h4><i class="fas fa-sliders-h"></i> NSS 模式 (Slave Select Management)</h4>
+                        <p>在 "Mode" 配置块中，有 "Hardware NSS Signal" 或类似的选项，以及在 "Parameter Settings" 中有 "NSS Signal Type"。</p>
+                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-success">Software</span>
+                             <span class="badge badge-primary">Hardware (Input)</span>
+                             <span class="badge badge-info">Hardware (Output)</span>
+                         </div>
+                        <ul>
+                            <li><strong>Software (NSS Signal Type: Software):</strong> <span class="badge badge-success">最常用且灵活</span> NSS 信号不由 SPI 外设硬件自动控制。你需要选择一个通用 GPIO 引脚作为 NSS，并在代码中手动拉低 (选中从设备) 和拉高 (取消选中)。
+                                <ul><li><code>Hardware NSS Signal</code> (在Mode部分) 通常设置为 <code>Disable</code>。</li></ul>
+                            </li>
+                            <li><strong>Hardware (Input) (NSS Signal Type: Hardware Input):</strong> STM32 作为 SPI 从设备时使用。NSS 引脚配置为硬件输入，当外部主机拉低此引脚时，STM32 SPI 从设备被选中。
+                                <ul><li><code>Hardware NSS Signal</code> (在Mode部分) 通常设置为 <code>Hardware Input</code> 或类似。</li></ul>
+                            </li>
+                            <li><strong>Hardware (Output) (NSS Signal Type: Hardware Output):</strong> STM32 作为 SPI 主机时使用。SPI 外设硬件在数据传输开始前自动拉低 NSS 引脚，传输结束后自动拉高。
+                                <ul><li><code>Hardware NSS Signal</code> (在Mode部分) 通常设置为 <code>Hardware Output</code> 或类似。</li></ul>
+                            </li>
+                        </ul>
+                        <p><strong>配置建议:</strong> 对于主机模式，<strong>Software NSS Management</strong> 提供了最大的灵活性，特别是当总线上有多个从设备或需要更精细控制 NSS 时序的场景。硬件 NSS 输出模式虽然简单，但可能不适用于所有情况 (例如，帧间需要保持 NSS 低电平)。</p>
+                    </div>
+                    <div class="sub-section">
+                        <h4><i class="fas fa-caret-square-down"></i> NSS 信号极性 (NSS Polarity - 仅硬件模式)</h4>
+                        <p>仅在 NSS 由硬件管理 (Hardware Input/Output) 时可配置。</p>
+                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-primary">Low</span>
+                             <span class="badge badge-gray">High</span>
+                         </div>
+                        <ul>
+                            <li><strong>Low:</strong> <span class="badge badge-primary">常用</span> NSS 信号低电平有效 (选中从设备)。</li>
+                            <li><strong>High:</strong> NSS 信号高电平有效。较少见。</li>
+                        </ul>
+                    </div>
+                     <div class="sub-section">
+                        <h4><i class="fas fa-stopwatch"></i> NSS 输出脉冲模式 (NSS Pulse Mode - 仅硬件输出)</h4>
+                        <p>某些 STM32 型号在硬件 NSS 输出模式下，允许配置 NSS 信号在每个数据帧之间是否产生脉冲 (即在帧间拉高再拉低)。</p>
+                        <p><strong>配置建议:</strong> 查阅具体 STM32 参考手册。如果从设备要求在连续传输的帧之间保持 NSS 低电平，则应禁用脉冲模式。</p>
+                    </div>
+                    <div class="config-tip">
+                        <i class="fas fa-lightbulb"></i> <strong>软件 NSS 控制:</strong> 如果选择软件 NSS，记得在 GPIO 配置中将对应引脚设为 Output Push-Pull，并在代码中实现：
+                        <pre><code class="language-c hljs">// 伪代码 - 具体宏和引脚需替换
+#define SPIx_NSS_GPIO_PORT GPIOB
+#define SPIx_NSS_PIN       GPIO_PIN_12
+
+void SPIx_NSS_Low() { HAL_GPIO_WritePin(SPIx_NSS_GPIO_PORT, SPIx_NSS_PIN, GPIO_PIN_RESET); }
+void SPIx_NSS_High() { HAL_GPIO_WritePin(SPIx_NSS_GPIO_PORT, SPIx_NSS_PIN, GPIO_PIN_SET); }
+
+// 在 SPI 传输前后调用
+// SPIx_NSS_Low();
+// HAL_SPI_Transmit(...);
+// SPIx_NSS_High();
+</code></pre>
+                    </div>
+                 `; break;
+                 case 'spi-crc': content += `
+                    <p>SPI CRC (Cyclic Redundancy Check) 功能可以在数据传输过程中自动计算和校验 CRC 值，以检测传输错误，增强数据完整性。</p>
+                     <div class="sub-section">
+                        <h4><i class="fas fa-toggle-on"></i> CRC 计算 (CRC Calculation)</h4>
+                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-danger">Disabled</span>
+                             <span class="badge badge-success">Enabled</span>
+                         </div>
+                        <ul>
+                            <li><strong>Disabled:</strong> <span class="badge badge-danger">默认/常用</span> 不使用 CRC 功能。</li>
+                            <li><strong>Enabled:</strong> 启用 CRC 计算和校验。启用后，SPI 外设会在发送数据时自动附加 CRC 值，并在接收数据时自动校验 CRC。</li>
+                        </ul>
+                    </div>
+                    <div class="sub-section">
+                        <h4><i class="fas fa-calculator"></i> CRC 多项式 (CRC Polynomial)</h4>
+                        <p>仅在 CRC 计算启用时配置。输入 CRC 计算所使用的多项式值 (通常是 7 位、8 位或 16 位 CRC 的系数，不包括最高位的 x<sup>n</sup>)。</p>
+                        <p><strong>常用 CRC 多项式:</strong> 例如 CRC-8 (如 0x07 for x<sup>8</sup>+x<sup>2</sup>+x+1), CRC-16-CCITT (0x1021 for x<sup>16</sup>+x<sup>12</sup>+x<sup>5</sup>+1)。</p>
+                        <p><i class="fas fa-book-open text-info"></i> STM32 SPI 的 CRC 长度通常是固定的 (例如 8 位或 16 位，取决于具体型号和数据帧长度)。你需要输入多项式的低位部分。</p>
+                    </div>
+                    <div class="sub-section">
+                        <h4><i class="fas fa-sort-amount-down"></i> CRC 长度 (CRC Length)</h4>
+                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-primary">8-bit</span>
+                             <span class="badge badge-info">16-bit</span>
+                         </div>
+                        <p>某些 STM32 型号允许选择 CRC 值的长度，通常与数据帧大小 (Data Size) 相关联。如果 Data Size <= 8-bit，CRC 通常也是 8-bit。如果 Data Size > 8-bit (例如 16-bit)，CRC 可能是 16-bit。</p>
+                        <p><strong>配置建议:</strong> 确保 CRC 长度和多项式与通信对方的配置一致。</p>
+                    </div>
+                    <div class="config-tip">
+                        <i class="fas fa-lightbulb"></i> <strong>使用场景:</strong> CRC 对于在噪声环境或长距离 SPI 通信中保证数据可靠性非常有用。但它会增加少量传输开销 (CRC 字节) 和处理时间。
+                        <ul>
+                            <li>如果启用 CRC，主机和从机都必须启用并使用相同的 CRC 配置 (多项式、长度、初始值等)。</li>
+                            <li>当 CRC 校验失败时，SPI 外设通常会设置一个错误标志位 (<code>CRCERR</code>)，可以触发错误中断。</li>
+                            <li>使用 CRC 时，HAL 库相关函数 (如 <code>HAL_SPI_Transmit_IT</code>, <code>HAL_SPI_Receive_DMA</code>) 会自动处理 CRC 的发送和校验。</li>
+                        </ul>
+                        <i class="fas fa-exclamation-triangle text-warning"></i> 如果从设备不支持 CRC 或配置不一致，启用 CRC 会导致通信失败。
+                    </div>
+                 `; break;
+                  case 'spi-dma': content += `
+                    <p>使用 DMA (Direct Memory Access) 可以在 CPU 不干预的情况下自动传输 SPI 数据，显著提高总线利用率和系统性能，特别是在高速或大数据量传输时。</p>
+                    <div class="sub-section">
+                        <h4><i class="fas fa-plus-circle"></i> 添加 DMA 请求 (Add DMA Request)</h4>
+                        <p>在 CubeMX 的 SPI 配置页面下找到 "DMA Settings" 标签页。根据需要，可以为发送 (Tx) 和/或接收 (Rx) 添加 DMA 请求。</p>
+                        <p>点击 "Add" 按钮，选择：</p>
+                        <ul>
+                            <li><code>SPIx_TX</code>: 用于主机发送数据或从机发送数据。</li>
+                            <li><code>SPIx_RX</code>: 用于主机接收数据或从机接收数据。</li>
+                        </ul>
+                    </div>
+                     <div class="sub-section">
+                        <h4><i class="fas fa-cogs"></i> DMA 通道配置 (DMA Request Settings)</h4>
+                        <p>为每个添加的 DMA 请求 (Tx 或 Rx) 配置参数：</p>
+                        <ul style="list-style-type: disc; padding-left: 20px;">
+                            <li><strong>Stream/Channel:</strong> 选择一个可用的 DMA 通道/流 (CubeMX 通常会自动分配)。</li>
+                            <li><strong>Direction:</strong> 方向。 <br>
+                                <span class="badge badge-info"><code>SPIx_TX</code>: Memory To Peripheral</span> <br>
+                                <span class="badge badge-info"><code>SPIx_RX</code>: Peripheral To Memory</span> <br>
+                                (由 CubeMX 自动设置)。
+                            </li>
+                            <li><strong>Priority:</strong> DMA 通道优先级 (<span class="badge badge-gray">Low</span>, <span class="badge badge-gray">Medium</span>, <span class="badge badge-primary">High</span>, <span class="badge badge-warning">Very High</span>)。</li>
+                            <li><strong>Mode:</strong> DMA 传输模式。
+                                <ul style="margin-left: 20px; list-style-type: circle;">
+                                     <li><code style="color: var(--success-color);">Normal</code>: <span class="badge badge-success">常用</span> 传输完指定长度的数据后停止。适用于大多数 SPI 传输。</li>
+                                     <li><code>Circular</code>: 环形模式。当需要连续不断地从 SPI 接收数据 (例如 ADC 连续采样) 或发送固定模式的数据时使用。</li>
+                                </ul>
+                            </li>
+                            <li><strong>Increment Address:</strong> 地址自增设置。
+                                 <ul style="margin-left: 20px; list-style-type: circle;">
+                                     <li><code>Peripheral</code>: <span class="badge badge-danger">不勾选</span> SPI 数据寄存器 (<code>DR</code>) 地址固定。</li>
+                                     <li><code>Memory</code>: <span class="badge badge-success">勾选</span> 内存缓冲区地址需要递增。</li>
+                                 </ul>
+                            </li>
+                             <li><strong>Data Width:</strong> 数据宽度（外设 Peripheral / 内存 Memory）。
+                                <ul style="margin-left: 20px; list-style-type: circle;">
+                                    <li>如果 SPI Data Size 为 <strong>8 Bits</strong>: <span class="badge badge-highlight">Peripheral: Byte, Memory: Byte</span>。</li>
+                                    <li>如果 SPI Data Size 为 <strong>16 Bits</strong>: <span class="badge badge-highlight">Peripheral: Half Word, Memory: Half Word</span>。</li>
+                                    <li>确保 DMA 的数据宽度与 SPI 配置的 Data Size 匹配。</li>
+                                </ul>
+                             </li>
+                        </ul>
+                    </div>
+                    <div class="config-tip">
+                        <i class="fas fa-lightbulb"></i> <strong>配置建议:</strong>
+                         <ul>
+                             <li>对于大数据量或高速 SPI 通信，<strong>强烈建议启用 DMA</strong> (Tx 和 Rx 都启用)。</li>
+                             <li><strong>Mode</strong> 通常设置为 <code style="color: var(--success-color);">Normal</code>。</li>
+                             <li><strong>Increment Address</strong> 勾选 <strong>Memory</strong>，不勾选 Peripheral。</li>
+                             <li><strong>Data Width</strong> 务必与 SPI 的 Data Size 匹配，并使用对应类型的 DMA 缓冲区 (<code>uint8_t[]</code> for Byte, <code>uint16_t[]</code> for Half Word)。</li>
+                             <li>使用 DMA 时，通常还需要配合启用 NVIC 中的 DMA 中断来获知传输完成或发生错误。</li>
+                         </ul>
+                         <i class="fas fa-code"></i> <strong>HAL 库函数:</strong> 启用 DMA 后，应使用带 DMA 的 HAL 函数进行传输，例如：<br>
+                         <code>HAL_SPI_Transmit_DMA()</code>, <code>HAL_SPI_Receive_DMA()</code>, <code>HAL_SPI_TransmitReceive_DMA()</code>。
+                    </div>
+                 `; break;
+                 case 'spi-interrupts': content += `
+                    <p>SPI 外设可以产生多种中断事件，通知 CPU 传输状态、错误条件或需要处理数据。与 DMA 结合使用时，通常由 DMA 中断处理数据传输完成，而 SPI 中断用于错误处理。</p>
+                     <div class="sub-section">
+                         <h4><i class="fas fa-bell"></i> NVIC 设置 (NVIC Settings)</h4>
+                         <p>需要在 CubeMX 的 "NVIC Settings" 标签页中，为对应的 SPI 外设启用中断。</p>
+                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                             <span class="badge badge-primary">SPIx global interrupt: Enabled</span>
+                         </div>
+                         <p>启用 SPI 全局中断后，可以在代码中通过 HAL 库使能或禁止特定的 SPI 中断源 (如 Tx Buffer Empty, Rx Buffer Not Empty, Error flags)。</p>
+                         <p><strong>配置建议:</strong></p>
+                         <ul>
+                             <li><strong>不使用 DMA，中断驱动模式:</strong> <span class="badge badge-success">必须启用</span> SPI 全局中断。在代码中，你会使用如 <code>HAL_SPI_Transmit_IT()</code>, <code>HAL_SPI_Receive_IT()</code> 这类函数，它们会管理具体的 SPI 事件中断。</li>
+                             <li><strong>使用 DMA 模式:</strong>
+                                 <ul>
+                                     <li><strong>推荐启用 SPI 全局中断:</strong> 主要用于捕获和处理 SPI 相关的<strong>错误中断</strong> (如 Overrun, Mode Fault, CRC Error)。DMA 传输完成由 DMA 的中断处理。</li>
+                                     <li>在这种情况下，SPI 的数据传输相关的中断 (TxE, RxNE) 通常由 HAL 的 DMA 驱动函数间接管理，或者不直接使用。</li>
+                                 </ul>
+                              </li>
+                         </ul>
+                         <p><strong>中断优先级 (Preemption Priority / Sub Priority):</strong> 根据系统需求合理配置。</p>
+                    </div>
+                      <div class="sub-section" style="background-color: #f8f9fa;">
+                         <h4><i class="fas fa-code-branch"></i> 相关的 HAL 回调函数</h4>
+                         <p>启用中断后，HAL 库会在相应事件发生时调用对应的回调函数（弱定义，用户需在自己的代码中重新实现）。</p>
+                         <p><strong>主要回调函数:</strong></p>
+                         <ul>
+                             <li><code>HAL_SPI_TxCpltCallback()</code>: 发送完成 (中断或 DMA 模式)。</li>
+                             <li><code>HAL_SPI_RxCpltCallback()</code>: 接收完成 (中断或 DMA 模式)。</li>
+                             <li><code>HAL_SPI_TxRxCpltCallback()</code>: 发送和接收均完成 (中断或 DMA 模式)。</li>
+                             <li><code>HAL_SPI_TxHalfCpltCallback()</code>, <code>HAL_SPI_RxHalfCpltCallback()</code>, <code>HAL_SPI_TxRxHalfCpltCallback()</code>: 半传输完成回调 (主要用于 DMA)。</li>
+                             <li><code>HAL_SPI_ErrorCallback()</code>: 发生错误时调用 (如 Mode Fault, Overrun, Underrun, CRC Error)。在此回调中，可以通过检查 SPI 句柄的 <code>ErrorCode</code> 字段来判断具体错误类型。</li>
+                             <li><code>HAL_SPI_AbortCpltCallback()</code>: 主动中止传输完成时调用。</li>
+                         </ul>
+                         <p><strong><i class="fas fa-exclamation-triangle text-warning"></i> 注意:</strong> 在 DMA 模式下，<code>TxCpltCallback</code>, <code>RxCpltCallback</code>, <code>TxRxCpltCallback</code> 主要由 DMA 传输完成中断触发，而不是 SPI 自身的数据事件中断。</p>
+                     </div>
+                     <div class="config-tip">
+                         <i class="fas fa-lightbulb"></i> <strong>中断策略:</strong>
+                          <ul>
+                              <li><strong>轮询模式 (不推荐):</strong> 不启用任何中断，代码中循环检查状态标志位。效率低下。</li>
+                              <li><strong>中断模式:</strong> 启用 SPI 全局中断。在回调函数中处理数据和服务。适用于数据量不大或速率不高的场景。</li>
+                              <li><strong>DMA + 中断模式 (推荐):</strong>
+                                  <ul>
+                                      <li>启用 DMA 通道中断 (在 DMA 配置中) 来处理数据传输完成 (<code>TxCplt/RxCplt</code>)。</li>
+                                      <li>启用 SPI 全局中断来处理 SPI 错误 (<code>ErrorCallback</code>)。</li>
+                                  </ul>
+                                  这是最高效的方式。
+                              </li>
+                          </ul>
+                     </div>
+                 `; break;
+                 case 'spi-gpio': content += `
+                    <p>正确配置 SPI 通信所使用的 MOSI, MISO, SCK 以及 NSS (如果软件控制) 引脚的 GPIO 功能是 SPI 正常工作的基础。</p>
+                    <div class="sub-section">
+                         <h4><i class="fas fa-map-pin"></i> 引脚选择 (Pin Selection)</h4>
+                         <p>在 CubeMX 的 Pinout 视图中，找到要使用的 SPI 外设 (如 SPI1)，点击其 MOSI, MISO, SCK 功能，然后在右侧的芯片引脚图中选择具体的物理引脚。</p>
+                         <p>如果使用软件 NSS, 也需要选择一个通用 GPIO 引脚作为 NSS。</p>
+                         <p><i class="fas fa-info-circle text-info"></i> 一个 SPI 功能通常可以映射到多个不同的 GPIO 引脚上，根据 PCB 布局选择合适的引脚。</p>
+                    </div>
+                     <div class="sub-section">
+                         <h4><i class="fas fa-cogs"></i> GPIO 配置 (GPIO Settings Tab)</h4>
+                         <p>在 CubeMX 的 SPI 配置页面下，切换到 "GPIO Settings" 标签页 (或直接在 Pinout 视图中点击引脚配置)，可以查看和微调已选定引脚的配置：</p>
+                         <ul style="list-style-type: disc; padding-left: 20px;">
+                             <li><strong>MOSI (Master Out Slave In):</strong>
+                                <ul>
+                                    <li>主机模式: <span class="badge badge-highlight">Alternate Function Push Pull</span></li>
+                                    <li>从机模式 (Full/Half Duplex): <span class="badge badge-highlight">Alternate Function Input</span> (或 Push Pull，取决于具体实现和 STM32 型号，通常 Input 就够了)</li>
+                                </ul>
+                             </li>
+                             <li><strong>MISO (Master In Slave Out):</strong>
+                                <ul>
+                                    <li>主机模式: <span class="badge badge-highlight">Alternate Function Input</span> (或 Push Pull)</li>
+                                    <li>从机模式: <span class="badge badge-highlight">Alternate Function Push Pull</span></li>
+                                </ul>
+                             </li>
+                            <li><strong>SCK (Serial Clock):</strong>
+                                <ul>
+                                    <li>主机模式: <span class="badge badge-highlight">Alternate Function Push Pull</span></li>
+                                    <li>从机模式: <span class="badge badge-highlight">Alternate Function Input</span></li>
+                                </ul>
+                             </li>
+                             <li><strong>NSS (Software Controlled):</strong>
+                                 <ul>
+                                    <li>主机模式: <span class="badge badge-success">GPIO_Output (Push Pull)</span>, 初始电平 <code>High</code> (若 NSS 低有效)。</li>
+                                    <li>从机模式 (如果需要软件判断 NSS): <span class="badge badge-gray">GPIO_Input</span>。</li>
+                                 </ul>
+                             </li>
+                              <li><strong>NSS (Hardware Controlled):</strong>
+                                 <ul>
+                                    <li>主机输出: <span class="badge badge-highlight">Alternate Function Push Pull</span></li>
+                                    <li>从机输入: <span class="badge badge-highlight">Alternate Function Input</span> (或 Push Pull)</li>
+                                 </ul>
+                             </li>
+                             <li><strong>GPIO Pull-up/Pull-down:</strong> 通常为 <span class="badge badge-danger">No pull-up and no pull-down</span>。SPI 信号线一般不需要外部或内部上拉/下拉，除非特定从设备或总线条件要求 (例如，某些情况下 MISO 线可能需要上拉)。NSS 软件控制时，如果担心悬空，可根据有效电平考虑上拉或下拉。</li>
+                             <li><strong>Maximum output speed:</strong> <span class="badge badge-success">High</span> 或 <span class="badge badge-primary">Very High</span>。为确保信号边沿陡峭以满足 SPI 时序要求，应选择较高的 GPIO 输出速度。</li>
+                         </ul>
+                     </div>
+                     <div class="config-tip">
+                         <i class="fas fa-exclamation-triangle text-danger"></i> <strong>关键点:</strong>
+                          <ul>
+                              <li><strong>模式必须是 Alternate Function Push Pull</strong> (对于输出信号如主机的SCK/MOSI, 从机的MISO) 或 <strong>Alternate Function Input</strong> (对于输入信号如主机的MISO, 从机的SCK/MOSI)。</li>
+                              <li><strong>GPIO 速度应设置为 High 或 Very High。</strong></li>
+                              <li>不正确的 GPIO 配置是 SPI 通信失败的常见原因之一。仔细核对每个引脚的角色和配置。</li>
+                          </ul>
+                     </div>
+                  `; break;
+                 default: content += '<p>详细说明内容待添加。</p>'; break;
+             }
+
+             content += '</div>'; 
+             return content;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstMenuItem = document.querySelector('#config-menu li');
+            if (firstMenuItem) {
+                firstMenuItem.click();
+            }
+            hljs.highlightAll();
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AD/DA转换 - 米醋电子工作室</title>
+    <!-- 注意：请确保同目录下存在 style.css 文件，或者修改这里的路径 -->
+    <link rel="stylesheet" href="../嵌入式开发09：UART/style.css"> 
+    <!-- 引入代码高亮库 highlight.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- 如果需要特定语言支持，可以单独引入 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- Copyright (c) 2024 米醋电子工作室. All rights reserved. -->
+    
+    <!-- 添加 MathJax 库用于渲染数学公式 -->
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']], // 定义行内公式定界符 \( ... \)
+                displayMath: [['\\[', '\\]']] // 定义块级公式定界符 \[ ... \]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <!-- MathJax 配置结束 -->
+</head>
+<body>
+    <header>
+        <h1>AD/DA 转换 - 米醋电子工作室</h1>
+        <p class="subtitle">连接模拟世界与数字世界的桥梁</p>
+        <nav>
+            <a href="#intro">介绍</a>
+            <a href="#adc-basics">ADC基础</a>
+            <a href="#hardware">硬件连接</a>
+            <a href="#adc-polling">ADC轮询法</a>
+            <a href="#adc-dma-polling">ADC DMA轮询法</a>
+            <a href="#adc-tim-dma-it">定时器+DMA+中断</a>
+            <a href="#dac-basics">DAC基础</a>
+            <a href="#dac-dma-sine">DAC DMA正弦波</a>
+            <a href="#hal-api-deep-dive">深入HAL API</a>
+            <!-- 后续章节链接将在这里添加 -->
+        </nav>
+    </header>
+
+    <main>
+        <section id="intro">
+            <h2><span class="icon">🚀</span> 1. 走进 AD/DA 的奇妙世界</h2>
+            <p>欢迎回来，未来的嵌入式高手！我们已经掌握了如何让单片机通过 UART 与外界"交流"。但是，现实世界充满了连续变化的模拟信号，比如温度、光线强度、声音大小等等。单片机内部处理的是离散的数字信号，如何让它们互相理解呢？</p>
+            <p>这时，<strong>ADC (Analog-to-Digital Converter, 模数转换器)</strong> 和 <strong>DAC (Digital-to-Analog Converter, 数模转换器)</strong> 就派上用场了！</p>
+            <ul>
+                <li><strong>ADC：</strong> 就像一位"翻译官"，把现实世界的模拟语言（连续变化的电压）翻译成单片机能懂的数字语言（离散的数值）。</li>
+                <li><strong>DAC：</strong> 则反过来，把单片机的数字指令翻译成模拟世界的电压信号，用来控制模拟器件（比如驱动扬声器发出声音、控制电机速度等）。</li>
+            </ul>
+            <p>本教程将带你探索 AD/DA 的基本原理和使用方法，首先从最简单的 ADC 读取方式——<strong>轮询法</strong>开始。</p>
+        </section>
+
+        <section id="adc-basics">
+            <h2><span class="icon">💡</span> 2. ADC 基础概念快速入门</h2>
+            <p>在开始编程前，了解几个 ADC 的核心概念至关重要。</p>
+
+            <div class="concept">
+                <h3>2.1 模拟 vs. 数字</h3>
+                <p>想象一下调节收音机的音量旋钮和按计算器的数字键：</p>
+                <ul>
+                    <li><strong>模拟 (Analog):</strong> 像音量旋钮，可以在一个范围内连续变化，有无限多个可能的音量值。现实世界的物理量大多是模拟的。</li>
+                    <li><strong>数字 (Digital):</strong> 像计算器的按键，只有有限的、离散的状态（0, 1, 2...）。计算机和单片机处理的是数字信号。</li>
+                </ul>
+                <p>ADC 的任务就是把模拟信号"采样"并"量化"成数字值。</p>
+            </div>
+
+            <div class="concept">
+                <h3>2.2 分辨率 (Resolution)</h3>
+                <p>分辨率决定了 ADC 能将模拟电压"切"成多少份，也就是它能区分多么细微的电压变化。通常用"位" (bits) 来表示。</p>
+                <p>例如，一个 12 位的 ADC，能表示 \(2^{12} = 4096\) 个不同的数字级别。如果参考电压是 3.3V，那么它能分辨的最小电压变化大约是 \(3.3V / 4096 \approx 0.0008V\) 或 0.8mV。</p>
+                <p><strong>分辨率越高，测量越精确，但转换速度可能越慢，成本也越高。</strong></p>
+            </div>
+
+            <div class="concept">
+                <h3>2.3 参考电压 (Reference Voltage, Vref)</h3>
+                <p>参考电压是 ADC 进行测量的"标尺"。它定义了 ADC 能够转换的模拟电压的<strong>最大值</strong>。输入的模拟电压不能超过参考电压。</p>
+                <p>ADC 输出的数字值通常与输入电压的关系是：</p>
+                \[ \text{Digital Value} = \frac{\text{Analog Input Voltage}}{V_{ref}} \times (2^{\text{Resolution}} - 1) \]
+                <p>在很多 STM32 单片机中，Vref 通常连接到 Vdda (模拟电源电压)，比如 3.3V。精确的 Vref 对于准确的 ADC 转换至关重要。</p>
+            </div>
+
+            <div class="concept">
+                <h3>2.4 采样率 (Sampling Rate)</h3>
+                <p>采样率表示 ADC 每秒钟进行多少次模数转换。单位通常是 SPS (Samples Per Second) 或 Hz。</p>
+                <p>根据奈奎斯特采样定理，采样率必须至少是被测模拟信号最高频率的两倍，才能无失真地还原原始信号。采样率越高，越能捕捉到快速变化的模拟信号。</p>
+            </div>
+        </section>
+
+        <section id="hardware">
+            <h2><span class="icon">🔌</span> 3. 硬件连接：捕捉模拟信号</h2>
+            <p>将模拟信号连接到 ADC 非常简单：</p>
+            <ol>
+                <li><strong>找到 ADC 输入引脚：</strong> 在你的 STM32 开发板上，通常会有标明如 `PA0`, `PC1` 等，并且这些引脚在 CubeMX 中可以配置为 ADC 的输入通道 (如 `ADC1_IN0`, `ADC1_IN11`)。查阅开发板原理图或引脚定义是最好的方法。</li>
+                <li><strong>连接模拟信号源：</strong> 将你的模拟信号源（比如电位器、温度传感器、光敏电阻分压电路的输出端）连接到选定的 ADC 输入引脚。</li>
+                <li><strong>连接地线 (GND)：</strong> 确保模拟信号源的地线 (GND) 与 STM32 开发板的地线 (GND) <strong>共地连接</strong>。这是保证测量准确的基础。</li>
+                <li><strong>（可选）连接 Vref：</strong> 确保 ADC 的参考电压引脚 (Vref+ 或 Vdda) 连接到稳定、精确的参考电压源（通常是开发板上的 3.3V）。</li>
+            </ol>
+            <p class="warning"><strong>注意：</strong> 输入到 ADC 引脚的电压绝对不能超过其允许的最大范围（通常是 0V 到 Vdda/Vref+）。GND 必须连接！</p>
+        </section>
+
+        <section id="adc-polling" class="code-explanation-section">
+            <h2><span class="icon">💻</span> 4. ADC 轮询法：最直接的读取方式</h2>
+            <p>ADC 配置完成后（通常通过 STM32CubeMX 生成初始化代码），我们如何获取转换结果呢？最简单直接的方法就是<strong>轮询法 (Polling)</strong>。</p>
+            <p>想象一下你要去楼下信箱取信：</p>
+            <ol>
+                <li>你<strong>走到</strong>信箱旁 (<code>HAL_ADC_Start(&hadc1);</code> - 启动一次转换)。</li>
+                <li>你站在那里<strong>一直等</strong>，直到邮递员把信投进去 (<code>HAL_ADC_PollForConversion(&hadc1, timeout);</code> - 循环检查转换完成标志位，直到超时)。</li>
+                <li>邮递员投完信后，你<strong>打开</strong>信箱，<strong>取出</strong>信件 (<code>adc_val = HAL_ADC_GetValue(&hadc1);</code> - 读取转换结果)。</li>
+            </ol>
+            <p>这种方式简单粗暴，但在等待期间 CPU 基本被"卡住"了，不能干别的事。如果转换时间很长，或者需要频繁读取，效率会很低。但在某些简单场景下，不失为一种快速验证功能的方法。</p>
+
+            <div class="code-subsection">
+                <h3>4.1 "守株待兔"：代码实现</h3>
+                <p>以下代码（来自 `adc_app.c` 中被注释掉的部分）演示了如何使用轮询方式读取 ADC 值：</p>
+                <pre><code class="language-c hljs">// 在需要读取 ADC 的地方调用，比如一个任务函数内
+void adc_read_by_polling(void) 
+{
+    // 1. 启动 ADC 转换
+    HAL_ADC_Start(&hadc1); // hadc1 是你的 ADC 句柄
+
+    // 2. 等待转换完成 (阻塞式)
+    //    参数 1000 表示超时时间 (毫秒)
+    if (HAL_ADC_PollForConversion(&hadc1, 1000) == HAL_OK) 
+    {
+        // 3. 转换成功，读取数字结果 (0-4095 for 12-bit)
+        adc_val = HAL_ADC_GetValue(&hadc1);
+
+        // 4. (可选) 将数字值转换为实际电压值
+        //    假设 Vref = 3.3V, 分辨率 12 位 (4096)
+        voltage = (float)adc_val * 3.3f / 4096.0f; 
+
+        // (这里可以加入你对 voltage 或 adc_val 的处理逻辑)
+        // my_printf(&huart1, "ADC Value: %lu, Voltage: %.2fV\n", adc_val, voltage);
+
+    } 
+    else 
+    {
+        // 转换超时或出错处理
+        // my_printf(&huart1, "ADC Poll Timeout!\n");
+    }
+    
+    // 5. （重要）如果 ADC 配置为单次转换模式，通常不需要手动停止。
+    //    如果是连续转换模式，可能需要 HAL_ADC_Stop(&hadc1);
+    // HAL_ADC_Stop(&hadc1); // 根据你的 CubeMX 配置决定是否需要
+}</code></pre>
+                <p>逻辑分解：</p>
+                <ol>
+                    <li><strong><code>HAL_ADC_Start(&hadc1);</code>:</strong> "开始转换！" 通知 ADC 硬件启动一次模数转换过程。</li>
+                    <li><strong><code>HAL_ADC_PollForConversion(&hadc1, 1000);</code>:</strong> "等等看结果出来没？" 这个函数会不断检查 ADC 状态寄存器中的转换完成标志位 (EOC - End Of Conversion)。如果标志位被硬件置位，表示转换完成，函数返回 <code>HAL_OK</code>。如果超过了设定的超时时间 (1000ms) 标志位还没置位，就返回 <code>HAL_TIMEOUT</code>。<strong>注意：这是一个阻塞函数</strong>，在等待期间，CPU 会卡在这里，执行一个循环检查。</li>
+                    <li><strong><code>adc_val = HAL_ADC_GetValue(&hadc1);</code>:</strong> "结果拿来！" 如果上一步返回 <code>HAL_OK</code>，就调用此函数从 ADC 数据寄存器中读取转换后的数字值。对于 12 位 ADC，这个值通常在 0 到 4095 之间。</li>
+                    <li><strong>电压计算:</strong> 将读取到的数字值根据参考电压和分辨率，按比例计算出对应的模拟电压值。这是可选步骤，取决于你的应用需求。</li>
+                    <li><strong><code>HAL_ADC_Stop(&hadc1);</code> (可能需要):</strong> 如果你在 CubeMX 中将 ADC 配置为连续转换模式 (Continuous Conversion Mode)，调用 <code>HAL_ADC_Start</code> 后 ADC 会不停地转换。在这种情况下，读取完一次后如果想停止，就需要调用 <code>HAL_ADC_Stop</code>。如果是单次转换模式 (Single Conversion Mode)，ADC 完成一次转换后会自动停止，通常不需要调用 Stop。请检查你的 CubeMX 配置。</li>
+                </ol>
+            </div>
+
+             <div class="code-subsection">
+                <h3>4.2 相关"管理员"：变量说明</h3>
+                 <div class="var-item">
+                    <span class="var-icon">🔢</span>
+                    <div class="var-content">
+                        <code>__IO uint32_t adc_val;</code>
+                        <p><strong>"数字读数":</strong> 用于存储从 <code>HAL_ADC_GetValue</code> 读取到的原始数字结果。<code>__IO</code> (volatile) 提示编译器这个值可能在预期流程之外被改变（虽然在纯轮询模式下意义不大，但在中断/DMA 模式下很重要）。</p>
+                    </div>
+                </div>
+                <div class="var-item">
+                    <span class="var-icon">⚡</span>
+                    <div class="var-content">
+                        <code>__IO float voltage;</code>
+                        <p><strong>"模拟电压":</strong> 用于存储根据 <code>adc_val</code> 计算得到的实际电压值。使用 <code>float</code> 类型以获得更精确的小数值。</p>
+                    </div>
+                </div>
+                 <div class="var-item">
+                    <span class="var-icon">⚙️</span>
+                    <div class="var-content">
+                        <code>extern ADC_HandleTypeDef hadc1;</code>
+                        <p><strong>"ADC控制器":</strong> HAL 库中代表 ADC1 硬件外设的结构体句柄。所有 ADC 操作都需要通过它进行。</p>
+                    </div>
+                </div>
+                 <div class="important-note">
+                    <span class="icon">⚠️</span>
+                    <div>
+                        <strong>轮询法的局限性：</strong> 轮询方式非常消耗 CPU 资源，因为它在等待期间反复检查状态，无法执行其他任务。只适用于对实时性要求不高、ADC 转换速度远快于处理需求的简单场景。对于需要同时处理多个任务或要求高效的应用，应优先考虑中断或 DMA 方式。
+                    </div>
+                 </div>
+            </div>
+        </section>
+
+        <!-- 新增：ADC DMA + 定时处理 -->
+        <section id="adc-dma-polling" class="code-explanation-section">
+            <h2><span class="icon">🚚</span> 5. ADC DMA + 定时处理：解放 CPU 的初步尝试</h2>
+            <p>轮询法虽然简单，但 CPU 一直在忙着等待，效率太低。为了让 CPU 能在 ADC 转换的同时处理其他任务，我们可以请出强大的帮手——<strong>DMA (Direct Memory Access)</strong>。</p>
+            <p>这种方法的思路是：</p>
+            <ol>
+                <li>配置 ADC 工作在<strong>连续转换模式</strong>。</li>
+                <li>配置 DMA 通道，让它像一个勤劳的"搬运工"，在 ADC 每完成一次转换后，<strong>自动将结果</strong>从 ADC 数据寄存器搬运到内存中的一个<strong>指定缓冲区</strong>（比如一个数组）。</li>
+                <li>DMA 通常配置为<strong>循环模式 (Circular Mode)</strong>，这样当缓冲区写满后，它会自动回到缓冲区的开头继续写入，覆盖旧的数据。</li>
+                <li><strong>不启用 ADC 或 DMA 的中断</strong>来触发数据处理。</li>
+                <li>CPU 在自己的主循环或一个定时任务中，<strong>定期地</strong>去读取这个 DMA 缓冲区的内容。</li>
+                <li>为了获得更稳定的读数，通常会对缓冲区中的多个样本值<strong>求平均</strong>。</li>
+            </ol>
+            <p><strong>类比：</strong> 就像你在门口放了一个大容量的自动收信篮 (DMA 缓冲区)。邮递员 (ADC) 不停地把信投进去，篮子满了就从头开始覆盖旧信 (循环模式)。你 (CPU) 不需要每次来信都跑去看，而是每隔一段时间（比如每天下午）去信箱里翻看一下最近的一批信件 (读取缓冲区)，然后根据这些信件综合判断情况 (求平均)。</p>
+            <p>这种方式相比纯轮询，大大降低了 CPU 占用，因为等待和数据搬运都由 DMA 在后台完成了。CPU 只需在需要数据时去读取即可。</p>
+
+            <div class="code-subsection">
+                <h3>5.1 "自动收信篮"：代码实现 (单通道)</h3>
+                <p>假设我们只关心一个 ADC 通道的连续采样，并希望获得一个平均值。</p>
+                <pre><code class="language-c hljs">// --- 全局变量 --- 
+#define ADC_DMA_BUFFER_SIZE 32 // DMA缓冲区大小，可以根据需要调整
+uint16_t adc_dma_buffer[ADC_DMA_BUFFER_SIZE]; // DMA 目标缓冲区
+__IO uint32_t adc_val;  // 用于存储计算后的平均 ADC 值
+__IO float voltage; // 用于存储计算后的电压值
+
+// --- 初始化 (通常在 main 函数或外设初始化函数中调用一次) ---
+void adc_dma_init(void)
+{
+    // 启动 ADC 并使能 DMA 传输
+    // hadc1: ADC 句柄
+    // (uint32_t*)adc_dma_buffer: DMA 目标缓冲区地址 (HAL库通常需要uint32_t*)
+    // ADC_DMA_BUFFER_SIZE: 本次传输的数据量 (缓冲区大小)
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, ADC_DMA_BUFFER_SIZE);
+}
+
+// --- 处理任务 (在主循环或定时器回调中定期调用) ---
+void adc_task(void)
+{
+    uint32_t adc_sum = 0;
+    
+    // 1. 计算 DMA 缓冲区中所有采样值的总和
+    //    注意：这里直接读取缓冲区，可能包含不同时刻的采样值
+    for(uint16_t i = 0; i < ADC_DMA_BUFFER_SIZE; i++)
+    {
+        adc_sum += adc_dma_buffer[i];
+    }
+    
+    // 2. 计算平均 ADC 值
+    adc_val = adc_sum / ADC_DMA_BUFFER_SIZE; 
+    
+    // 3. (可选) 将平均数字值转换为实际电压值
+    voltage = ((float)adc_val * 3.3f) / 4096.0f; // 假设12位分辨率, 3.3V参考电压
+
+    // 4. 使用计算出的平均值 (adc_val 或 voltage)
+    // my_printf(&huart1, "Average ADC: %lu, Voltage: %.2fV\n", adc_val, voltage);
+}</code></pre>
+                <p>逻辑分解：</p>
+                <ol>
+                    <li><strong>定义缓冲区:</strong> <code>uint16_t adc_dma_buffer[ADC_DMA_BUFFER_SIZE];</code> 创建一个数组作为 DMA 的目标地址。大小 `ADC_DMA_BUFFER_SIZE` 决定了我们一次平均多少个采样点。</li>
+                    <li><strong>启动 DMA:</strong> <code>HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, ADC_DMA_BUFFER_SIZE);</code> 这是关键函数。它会配置 ADC 开始连续转换，并指示 DMA 控制器将每次转换的结果自动存入 `adc_dma_buffer`。因为 DMA 配置为循环模式，这个过程会一直进行下去，无需再次调用 Start。</li>
+                    <li><strong>定时处理 (<code>adc_task</code>):</strong> 这个函数需要被定期调用。
+                        <ul>
+                            <li><strong>求和:</strong> 遍历整个 DMA 缓冲区，将所有值累加到 `adc_sum`。</li>
+                            <li><strong>求平均:</strong> 用总和除以缓冲区大小，得到平均 ADC 读数 `adc_val`。</li>
+                            <li><strong>计算电压:</strong> (可选) 根据平均 ADC 值计算出对应的电压。</li>
+                            <li><strong>使用结果:</strong> 将计算得到的 `adc_val` 或 `voltage` 用于后续逻辑。</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <!-- 新增：关于 (uint32_t*) 转换和 DMA 字传输的说明 -->
+            <div class="explanation-note important-note" style="margin-top: 1.5em; margin-bottom: 1.5em;">
+                <span class="icon">❓</span>
+                <div>
+                    <strong>深入解析：为何是 <code>(uint32_t*)adc_dma_buffer</code> 和 Word 传输？</strong>
+                    <p>您可能注意到，即使我们的 ADC 缓冲区 <code>adc_dma_buffer</code> 定义为 <code>uint16_t</code> 类型（因为 12 位或 16 位 ADC 的结果适合用 16 位整数存储），在调用 <code>HAL_ADC_Start_DMA</code> 时，我们却将其强制转换为了 <code>uint32_t*</code>。同时，在 CubeMX 中配置 DMA 时，内存和外设的数据宽度 (Memory/Peripheral Data Width) 通常都设置为 <strong>Word (32位)</strong>。这是为什么呢？</p>
+                    <ol>
+                        <li>
+                            <strong>ADC 数据寄存器是 32 位的：</strong> 关键在于，STM32 的 ADC 数据寄存器 (<code>DR</code>) 本身通常是一个 <strong>32 位宽</strong>的寄存器。虽然实际有效的转换结果可能只占低 12 位或 16 位，但硬件层面，它位于一个 32 位的"容器"中。
+                        </li>
+                        <li>
+                            <strong>DMA 传输效率与对齐：</strong> DMA 控制器按配置的数据宽度进行传输。将外设和内存的数据宽度都设置为 Word (32位)，可以简化 DMA 配置，并且通常能更好地利用总线带宽和保证内存对齐，从而提高传输效率。DMA 每次直接从 32 位的 ADC 数据寄存器搬运一个 32 位的数据到内存中的 32 位对齐地址。
+                        </li>
+                        <li>
+                            <strong>HAL 函数签名的统一性：</strong> HAL 库的 DMA 相关函数为了通用性，其缓冲区指针参数通常设计为 <code>uint32_t*</code> 类型。因此，即使我们的目标是存储 16 位的数据，也需要进行类型转换 <code>(uint32_t*)adc_dma_buffer</code> 来匹配函数签名。
+                        </li>
+                        <li>
+                            <strong>数据如何存储？</strong> 当 DMA 以 Word 宽度传输时，它会将 ADC 的 32 位数据寄存器内容完整地搬运到 <code>adc_dma_buffer</code> 数组的每个 <code>uint16_t</code> *元素所占的内存空间*。由于我们定义的是 <code>uint16_t</code> 数组，实际上 DMA 每次写入会覆盖两个相邻的 <code>uint16_t</code> 元素（因为一个 32 位 Word 包含两个 16 位 Half-Word）。但是，因为 ADC 的有效数据通常在低 16 位，所以我们访问 <code>adc_dma_buffer[i]</code> 时，通常能正确获取到需要的转换结果（存储在内存的低 16 位部分）。<br>
+                            <strong>更推荐的做法：</strong> 为了避免潜在的混乱和未定义行为（特别是在不同架构或编译器优化下），更清晰和安全的方法是将 DMA 缓冲区也定义为 <code>uint32_t</code> 类型：
+                            <pre><code class="language-c hljs">uint32_t adc_dma_buffer[ADC_DMA_BUFFER_SIZE];
+// ...
+HAL_ADC_Start_DMA(&hadc1, adc_dma_buffer, ADC_DMA_BUFFER_SIZE);
+// ...
+// 处理时，仍然只关心低16位
+adc_sum += (uint16_t)adc_dma_buffer[i];</code></pre>
+                            或者，在 CubeMX 中将 DMA 的<strong>内存数据宽度</strong> (Memory Data Width) 配置为 <strong>Half Word (16位)</strong>，与外设宽度（如果也配置为 Half Word）或实际数据大小匹配。这样，DMA 每次只传输 16 位，可以与 <code>uint16_t</code> 缓冲区完美对应，也无需类型转换（但需确认 HAL 函数是否仍需 `uint32_t*` 并相应调整）。<strong>不过，将外设和内存宽度都设为 Word 是更常见且通常推荐的配置。</strong>
+                        </li>
+                    </ol>
+                    <p><strong>结论：</strong> 将 DMA 配置为 Word 传输并使用 <code>(uint32_t*)</code> 转换是为了匹配硬件寄存器宽度、提高效率和满足 HAL 函数签名。虽然直接使用 <code>uint16_t</code> 缓冲区在很多情况下能工作，但定义为 <code>uint32_t</code> 缓冲区或精确配置 DMA 宽度为 Half Word 是更严谨的做法。</p>
+                </div>
+            </div>
+
+             <div class="code-subsection">
+                <h3>5.2 相关"管理员"：变量说明</h3>
+                 <div class="var-item">
+                    <span class="var-icon">🧺</span>
+                    <div class="var-content">
+                        <code>uint16_t adc_dma_buffer[ADC_DMA_BUFFER_SIZE];</code>
+                        <p><strong>"DMA 自动收信篮":</strong> DMA 持续写入 ADC 转换结果的内存区域。CPU 会定期读取这里的数据。</p>
+                    </div>
+                </div>
+                 <div class="var-item">
+                    <span class="var-icon">📊</span>
+                    <div class="var-content">
+                        <code>__IO uint32_t adc_val;</code>
+                        <p><strong>"平均读数":</strong> 用于存储通过对 DMA 缓冲区数据求平均计算得到的 ADC 值。</p>
+                    </div>
+                </div>
+                <div class="var-item">
+                    <span class="var-icon">⚡</span>
+                    <div class="var-content">
+                        <code>__IO float voltage;</code>
+                        <p><strong>"平均电压":</strong> 用于存储根据平均 ADC 值计算得到的电压。</p>
+                    </div>
+                </div>
+                 <div class="important-note">
+                    <span class="icon">💡</span>
+                    <div>
+                        <strong>优点与缺点：</strong> 相比轮询，极大降低了 CPU 占用。实现相对简单，无需处理中断。但缺点是数据处理不是实时的，存在一定的延迟（取决于处理任务的调用周期）；直接读取循环缓冲区进行平均，混合了新旧数据，可能不够精确；如果需要精确控制采样和处理的同步，这种方法不够灵活。
+                    </div>
+                 </div>
+            </div>
+        </section>
+
+        <!-- 新增：ADC 定时器触发 + DMA + 中断 -->
+        <section id="adc-tim-dma-it" class="code-explanation-section">
+            <h2><span class="icon">⏱️</span> 6. ADC 精准采样：定时器触发 + DMA + 块处理</h2>
+            <p>前面两种方法各有优劣。轮询法效率低，DMA+定时处理法数据处理不够实时。当我们需要以较为固定的频率进行 ADC 采样，并在采集完<strong>一批数据块</strong>后进行集中处理时，可以结合定时器、DMA 和中断。</p>
+            <p>这种方法的思路是：</p>
+            <ol>
+                <li><strong>定时器 (Timer) 作为"启动信号" (可选，或由软件触发):</strong> 可以配置一个定时器以固定频率产生触发信号（TRGO），启动 ADC 转换序列。或者，转换序列由软件直接启动。ADC 配置为外部触发模式（如果使用定时器）或软件触发。</li>
+                <li><strong>DMA "搬运工":</strong> 配置 DMA 通道，在每次 ADC 转换完成后（或根据触发信号），自动将结果从 ADC 数据寄存器搬运到内存缓冲区 (DMA Buffer)。DMA 通常设置为<strong>普通模式 (Normal Mode)</strong> 或一次传输后停止。</li>
+                <li><strong>DMA 中断报告"整批送达":</strong> 配置 DMA，使其在完成一次完整的缓冲区传输（填满整个 DMA Buffer）时产生一个<strong>传输完成中断 (Transfer Complete Interrupt - TC)</strong>。</li>
+                <li><strong>中断服务程序 (ISR) "标记完成":</strong> 在 DMA 的 TC 中断服务程序中（通常在 `HAL_ADC_ConvCpltCallback` 回调中体现）：
+                    <ul>
+                        <li><strong>停止 DMA 传输</strong> (`HAL_ADC_Stop_DMA`)。</li>
+                        <li>设置一个标志位 (Flag)，通知主循环或后台任务："一个数据块已采集完成！"</li>
+                    </ul>
+                </li>
+                <li><strong>后台任务处理并重启:</strong> 主循环或后台任务检测到标志位后：
+                    <ul>
+                        <li>清空标志位。</li>
+                        <li>处理 DMA 缓冲区中的数据（例如，提取、计算、滤波等）。</li>
+                        <li>处理完成后，<strong>重新启动 ADC 的 DMA 传输</strong> (`HAL_ADC_Start_DMA`)，准备采集下一个数据块。</li>
+                    </ul>
+                </li>
+            </ol>
+            <p><strong>类比：</strong> 你命令一个机器人 (DMA+ADC) 去收集指定数量 (BUFFER_SIZE) 的样本。机器人收集完毕后，会举起一个牌子 (设置 Flag) 并停下工作 (`HAL_ADC_Stop_DMA`)。你 (CPU) 看到牌子后，走过去取走机器人收集的所有样本进行处理。处理完后，你再次命令机器人开始新一轮的收集 (`HAL_ADC_Start_DMA`)。</p>
+            <p>这种方式允许在采集间隙处理数据，但处理和重启 DMA 期间可能会丢失连续信号。适用于对数据块进行分析处理，而非严格连续实时处理的场景。</p>
+
+            <div class="code-subsection">
+                <h3>6.1 "节拍器"核心：定时器基础与配置 (若使用)</h3>
+                <p>如果需要定时器精确控制每次数据块采集的<strong>启动</strong>频率，其配置与之前类似。你需要根据期望的<strong>数据块采集间隔</strong>来设置定时器的触发频率。</p>
+                <!-- 保留定时器基础概念解释 -->
+                <div class="concept">
+                    <h4>定时器时钟源 (Clock Source)</h4>
+                    <p>定时器需要一个稳定的时钟源来计数。通常选择内部时钟 (Internal Clock)，其频率与 APB 总线时钟相关（例如，如果 APB1 时钟是 72MHz，那么 TIM3 的时钟基频通常也是 72MHz 或其倍频）。</p>
+                </div>
+                 <div class="concept">
+                    <h4>预分频器 (Prescaler - PSC)</h4>
+                    <p>定时器的输入时钟频率可能很高（如 72MHz）。预分频器允许你对输入时钟进行分频，得到一个较低的计数频率 (Counter Clock)。</p>
+                    <p><code>Counter Clock = Timer Clock / (Prescaler + 1)</code></p>
+                    <p>例如，Timer Clock = 72MHz，Prescaler = 71，则 Counter Clock = 72,000,000 / (71 + 1) = 1,000,000 Hz = 1MHz。这意味着计数器每 1 微秒 (µs) 计一次数。</p>
+                </div>
+                 <div class="concept">
+                    <h4>自动重装载寄存器 (Auto-Reload Register - ARR) / 周期 (Period)</h4>
+                    <p>ARR 决定了计数器从 0 计数到多少时产生一个"溢出"或"更新"事件 (Update Event - UEV)，并自动重新从 0 开始计数。这个值决定了更新事件的频率。</p>
+                    <p><code>Update Event Frequency = Counter Clock / (ARR + 1)</code></p>
+                    <p>继续上面的例子，Counter Clock = 1MHz。如果我们想每 10ms (即 100Hz) 触发一次 ADC 块采集，那么：</p>
+                    <p><code>100 Hz = 1,000,000 Hz / (ARR + 1)</code></p>
+                    <p>解得 <code>ARR + 1 = 10000</code>，所以 <code>ARR = 9999</code>。</p>
+                    <p>通过组合 PSC 和 ARR，我们可以精确地配置出所需的触发频率。</p>
+                </div>
+                <div class="concept">
+                    <h4>触发输出 (Trigger Output - TRGO)</h4>
+                    <p>定时器可以将内部的多种事件（如更新事件 UEV、比较匹配事件等）作为触发信号输出给其他外设（如 ADC、DAC）。我们需要将 TRGO 设置配置为"Update Event"，这样每次计数器溢出时，就会产生一个触发信号。</p>
+                </div>
+                <!-- 定时器计算器保留 -->
+                 <div class="interactive-calculator" style="margin-top: 2em; margin-bottom: 2em; padding: 1.8em 2em; border: 1px solid var(--border-color, #d1d1d6); border-radius: var(--border-radius, 10px); background-color: var(--card-background, #ffffff); box-shadow: var(--box-shadow, 0 1px 3px rgba(0,0,0,0.04));">
+                    <h4 style="margin-top: 0; margin-bottom: 1.8em; border-bottom: 1px solid var(--border-color, #eee); padding-bottom: 0.8em; font-weight: 600; color: var(--text-color, #1d1d1f);"><span class="icon" style="margin-right: 0.5em;">⚙️</span> 定时器触发频率计算器</h4>
+                    <div class="calc-input-group" style="display: flex; align-items: center; margin-bottom: 1.4em;">
+                        <label for="sysClkInput" style="min-width: 180px; margin-right: 1em; color: var(--secondary-text-color, #6e6e73); font-weight: 500;">系统/定时器主频 (MHz):</label>
+                        <input type="number" id="sysClkInput" value="72" min="1" style="width: 110px; padding: 0.6em 0.8em; border: 1px solid var(--border-color, #d1d1d6); border-radius: calc(var(--border-radius, 10px) * 0.6); background-color: var(--background-color, #ffffff); color: var(--text-color, #1d1d1f); font-size: 0.95em;">
+                    </div>
+                    <!-- 新增勘误区域 -->
+                    <div class="important-note warning-note" style="display: flex; align-items: flex-start; margin-top: 1em; margin-bottom: 1.8em; padding: 1.2em 1.5em; background-color: rgba(255, 235, 59, 0.1); border: 1px solid rgba(255, 235, 59, 0.5); border-radius: var(--border-radius, 10px); font-size: 0.9em; line-height: 1.6;">
+                        <span class="icon" style="margin-right: 0.8em; margin-top: 0.1em; font-size: 1.2em;">⚠️</span>
+                        <div><strong>勘误说明：</strong> 此处输入的应为<strong>定时器的实际输入时钟频率</strong>，通常是经过 APB 总线分频后的频率（例如，若 APB1 时钟为 72MHz 且定时器时钟未被进一步分频，则输入 72），而不是 CPU 的主频（如 180MHz）。请查阅您的 MCU 数据手册和 CubeMX 配置确定正确的定时器时钟源频率。</div>
+                    </div>
+                    <!-- 勘误区域结束 -->
+                    <div class="calc-input-group" style="display: flex; align-items: center; margin-bottom: 1.8em;">
+                        <label for="targetFreqInput" style="min-width: 180px; margin-right: 1em; color: var(--secondary-text-color, #6e6e73); font-weight: 500;">目标触发频率 (Hz):</label>
+                        <input type="number" id="targetFreqInput" value="1000" min="1" style="width: 110px; padding: 0.6em 0.8em; border: 1px solid var(--border-color, #d1d1d6); border-radius: calc(var(--border-radius, 10px) * 0.6); background-color: var(--background-color, #ffffff); color: var(--text-color, #1d1d1f); font-size: 0.95em;">
+                    </div>
+                    <button id="calculateBtn" style="padding: 0.7em 1.8em; background-color: var(--primary-color, #007aff); color: white; border: none; border-radius: calc(var(--border-radius, 10px) * 0.8); cursor: pointer; font-size: 1em; font-weight: 500; transition: opacity 0.2s ease;">计算 PSC & ARR</button>
+                    <div id="calcResult" style="margin-top: 1.8em; padding: 1.2em 1.5em; background-color: var(--secondary-background-color, #f5f5f7); border: 1px solid var(--border-color, #d1d1d6); border-radius: var(--border-radius, 10px); min-height: 60px; line-height: 1.7; font-family: var(--font-family); color: var(--secondary-text-color, #6e6e73); font-size: 0.95em;">
+                        <!-- 计算结果将显示在这里 -->
+                    </div>
+                </div>
+                <style>
+                    /* 为计算结果区域添加一些特定样式 */
+                    .interactive-calculator #calcResult .result-line {
+                        margin-bottom: 0.6em;
+                    }
+                    .interactive-calculator #calcResult .result-value {
+                        font-weight: 600;
+                        color: var(--primary-color, #007aff);
+                        font-size: 1.1em;
+                        margin-left: 0.5em;
+                    }
+                    .interactive-calculator #calcResult .result-details {
+                        font-size: 0.9em;
+                        color: var(--tertiary-text-color, #86868b);
+                        margin-top: 0.8em;
+                    }
+                    .interactive-calculator #calcResult.error-message {
+                        color: #dc3545; /* 错误信息用红色 */
+                        font-weight: 500;
+                        background-color: #f8d7da; /* 淡红色背景 */
+                        border-color: #f5c6cb;
+                    }
+                </style>
+            </div>
+
+            <div class="code-subsection">
+                <h3>6.2 ADC 与 DMA 配置：按块搬运</h3>
+                <p>配置 ADC 和 DMA 以实现数据块的采集：</p>
+                <p><strong>CubeMX 配置步骤 (以 ADC1 为例):</strong></p>
+                <ol>
+                    <li><strong>配置 ADC:</strong>
+                        <ul>
+                            <li>如果使用定时器触发，设置 "External Trigger Conversion Source" 和 "Edge"。</li>
+                            <li>如果采样多个通道，配置 Scan Conversion Mode 和通道顺序。根据代码 `adc_val_buffer[i * 2 + 1]` 的用法，似乎配置了至少两个通道进行扫描转换。</li>
+                            <li>"Continuous Conversion Mode" 应设置为 <strong>Disabled</strong>。</li>
+                        </ul>
+                    </li>
+                    <li><strong>配置 DMA (在 ADC 的 DMA Settings 页):</strong>
+                        <ul>
+                            <li>添加 DMA 请求，选择通道。</li>
+                            <li>设置 Mode 为 <strong>Normal</strong>。DMA 完成 `BUFFER_SIZE` 次传输后会自动停止，直到被软件重新启动。</li>
+                            <li>Peripheral 和 Memory 的 Data Width 通常设置为 <strong>Word</strong> (32-bit)。</li>
+                            <li>Memory 地址递增 (Increment Address: Memory)。</li>
+                        </ul>
+                    </li>
+                     <li><strong>启用中断 (在 NVIC Settings 页):</strong>
+                        <ul>
+                            <li>启用与 ADC 关联的 DMA 通道的中断 (例如 DMA1 Channel1)。</li>
+                            <li>启用 ADC 全局中断。</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+             <div class="code-subsection">
+                <h3>6.3 "块采集、处理、重启"：代码实现</h3>
+                <p>以下代码片段演示了基于 DMA 的块数据采集、处理和重启流程：</p>
+                <pre><code class="language-c hljs">// --- 宏定义和外部变量 ---
+#define BUFFER_SIZE 1000        // DMA 缓冲区大小 (总点数)
+
+extern DMA_HandleTypeDef hdma_adc1; // 假设这是 ADC1 对应的 DMA 句柄
+extern ADC_HandleTypeDef hadc1;    // ADC1 句柄
+extern UART_HandleTypeDef huart1; // 用于 my_printf 的 UART 句柄
+
+// --- 全局变量 ---
+uint32_t dac_val_buffer[BUFFER_SIZE / 2]; // 用于存储处理后的 ADC 数据
+__IO uint32_t adc_val_buffer[BUFFER_SIZE]; // DMA 目标缓冲区 (存储原始 ADC 数据)
+
+__IO uint8_t AdcConvEnd = 0;             // ADC 转换完成标志 (一个块完成)
+
+// --- 初始化函数 (在 main 或外设初始化后调用) ---
+void adc_tim_dma_init(void)
+{
+    // 启动 ADC 的 DMA 传输，请求 BUFFER_SIZE 个数据点
+    // 注意：这里假设 hadc1 已经配置为合适的触发模式 (定时器或软件)
+    //       且 DMA 配置为 Normal 模式
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_val_buffer, BUFFER_SIZE);
+
+    // 显式禁用 DMA 半传输中断 (如果不需要处理半满事件)
+    __HAL_DMA_DISABLE_IT(&hdma_adc1, DMA_IT_HT);
+
+    // 注意：如果使用定时器触发，需要在此处或之前启动定时器
+    HAL_TIM_Base_Start(&htimX); // 替换 htimX 为实际定时器句柄
+}
+
+// --- ADC 转换完成回调函数 (由 DMA TC 中断触发) ---
+// 当 DMA 完成整个缓冲区的传输 (Normal 模式下传输 BUFFER_SIZE 个点) 时触发
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    // 检查是否是由我们关心的 ADC (hadc1) 触发的
+    if (hadc->Instance == ADC1) // 或 if(hadc == &hadc1)
+    {
+        HAL_ADC_Stop_DMA(hadc);
+
+        // 设置转换完成标志，通知后台任务数据已准备好
+        AdcConvEnd = 1;
+    }
+}
+
+// --- 后台处理任务 (在主循环或低优先级任务中调用) ---
+void adc_task(void)
+{
+    // 检查转换完成标志
+    if (AdcConvEnd)
+    {
+        // 处理数据: 从原始 ADC 缓冲区提取数据到 dac_val_buffer
+        // 示例逻辑：提取扫描转换中第二个通道的数据 (?)
+        for(uint16_t i = 0; i < BUFFER_SIZE / 2; i++)
+        {
+            // 假设 adc_val_buffer[0] 是通道1, adc_val_buffer[1] 是通道2, ...
+            dac_val_buffer[i] = adc_val_buffer[i * 2 + 1];
+        }
+
+        // 打印处理后的数据 (示例)
+        for(uint16_t i = 0; i < BUFFER_SIZE / 2; i++)
+        {
+            // 注意: my_printf 是自定义函数, 需确保其存在且可用
+            my_printf(&huart1, "{dac}%d
+", (int)dac_val_buffer[i]);
+        }
+
+        // 清理处理后的缓冲区 (可选)
+        memset(dac_val_buffer, 0, sizeof(uint32_t) * (BUFFER_SIZE / 2));
+
+        // 清除转换完成标志，准备下一次采集
+        AdcConvEnd = 0;
+
+        // 重新启动 ADC 的 DMA 传输，采集下一个数据块
+        // 注意: 需要确保 ADC 状态适合重启 (例如没有错误)
+        HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_val_buffer, BUFFER_SIZE);
+        // 再次禁用半传输中断 (如果 Start_DMA 会重新启用它)
+        __HAL_DMA_DISABLE_IT(&hdma_adc1, DMA_IT_HT);
+    }
+}
+</code></pre>
+                <p>逻辑分解：</p>
+                <ol>
+                    <li><strong>缓冲区定义:</strong> `adc_val_buffer` 用于 DMA 直接写入原始 ADC 数据，`dac_val_buffer` 用于存储处理后的数据。`AdcConvEnd` 作为块传输完成的标志。</li>
+                    <li><strong>初始化 (<code>adc_tim_dma_init</code>):</strong> 启动 ADC 的 DMA 传输，请求采集 `BUFFER_SIZE` 个点。禁用半传输中断。<strong>注意：</strong> 触发 ADC 的定时器（如果使用）也需在此或之前启动。</li>
+                    <li><strong>中断回调 (<code>HAL_ADC_ConvCpltCallback</code>):</strong>
+                        <ul>
+                            <li>当 DMA 完成 `BUFFER_SIZE` 次传输后触发。</li>
+                            <li>设置 `AdcConvEnd = 1;` 通知后台任务。</li>
+                        </ul>
+                    </li>
+                    <li><strong>后台任务 (<code>adc_task</code>):</strong>
+                        <ul>
+                            <li>检查 `AdcConvEnd` 标志。</li>
+                            <li>如果标志为 1：
+                                <ul>
+                                    <li>处理数据：示例中将 `adc_val_buffer` 中索引为奇数的元素复制到 `dac_val_buffer`（这通常意味着提取多通道扫描中的某个特定通道的数据）。</li>
+                                    <li>打印处理结果。</li>
+                                    <li>（可选）清空 `dac_val_buffer`。</li>
+                                    <li>清除 `AdcConvEnd` 标志。</li>
+                                    <li><strong>重新启动</strong> `HAL_ADC_Start_DMA`，开始采集下一个数据块。</li>
+                                    <li>再次禁用 HT 中断。</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="code-subsection">
+                 <h3>6.4 关键优势与注意事项</h3>
+                 <div class="important-note">
+                     <span class="icon">✨</span>
+                     <div>
+                         <strong>主要优势：</strong>
+                         <ul>
+                             <li><strong>实现相对简单：</strong> 相比 Ping-Pong 缓冲或复杂的环形缓冲区，回调和任务逻辑更直接。</li>
+                             <li><strong>块处理：</strong> 适合需要对固定大小数据块进行整体分析或处理的应用（如 FFT 前的数据准备、特定事件后的快照采集）。</li>
+                             <li><strong>低 CPU 占用（采集期间）：</strong> 数据采集过程由 DMA 完成。</li>
+                         </ul>
+                     </div>
+                 </div>
+                 <div class="important-note warning-note">
+                     <span class="icon">⚠️</span>
+                     <div>
+                         <strong>注意事项：</strong>
+                         <ul>
+                             <li><strong>数据丢失：</strong> 在 `adc_task` 处理数据和重新启动 DMA 的期间，ADC 没有在采集数据，会造成数据的不连续性。不适用于需要无缝、连续数据流的应用。</li>
+                             <li><strong>处理时间限制：</strong> 后台任务 (`adc_task`) 处理数据的时间必须小于期望的数据块采集间隔，否则会延迟下一次采集的启动。</li>
+                             <li><strong>DMA 模式：</strong> 必须确保 DMA 配置为 Normal 模式，以便在传输完指定数量的点后停止并触发 TC 中断。</li>
+                             <li><strong>多通道数据交错：</strong> 如果 ADC 配置为多通道扫描模式，DMA 缓冲区 `adc_val_buffer` 中将包含所有通道交错的数据。处理时需要根据通道顺序正确提取所需数据（如此示例中提取奇数索引元素）。</li>
+                             <li><strong>重启条件：</strong> 在 `adc_task` 中重新调用 `HAL_ADC_Start_DMA` 前，应确保 ADC 和 DMA 处于合适的状态（例如，没有发生错误）。</li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+
+        </section>
+
+        <!-- ==================== DAC 部分开始 ==================== -->
+
+        <section id="dac-basics">
+            <h2><span class="icon">🎶</span> 7. DAC 基础概念：从数字到模拟的魔法</h2>
+            <p>与 ADC 相反，DAC (Digital-to-Analog Converter) 的任务是将单片机内部的数字值转换为外部世界连续变化的模拟电压或电流信号。它就像一位"乐谱演奏家"，将数字化的乐谱 (数字值) 转换成实际的声波 (模拟信号)。</p>
+
+            <div class="concept">
+                <h3>7.1 分辨率 (Resolution)</h3>
+                <p>与 ADC 类似，DAC 的分辨率也决定了其输出精度的细腻程度，同样用"位" (bits) 表示。</p>
+                <p>一个 12 位的 DAC，可以将输入的数字值 (0 到 \(2^{12}-1 = 4095\)) 映射到输出电压范围内的 4096 个不同的模拟电压等级。分辨率越高，输出的模拟信号越平滑，越接近理想的模拟波形。</p>
+            </div>
+
+            <div class="concept">
+                <h3>7.2 参考电压 (Reference Voltage, Vref)</h3>
+                <p>DAC 的参考电压定义了其输出模拟电压的<strong>最大值</strong>。输出电压通常与输入的数字值成正比：</p>
+                \[ \text{Analog Output Voltage} = V_{ref} \times \frac{\text{Digital Input Value}}{2^{\text{Resolution}}} \]
+                <p>例如，对于 12 位 DAC，Vref = 3.3V：</p>
+                <ul>
+                    <li>输入数字值为 0 时，输出电压 ≈ 0V。</li>
+                    <li>输入数字值为 4095 时，输出电压 ≈ 3.3V。</li>
+                    <li>输入数字值为 2048 时，输出电压 ≈ 3.3V * (2048 / 4096) = 1.65V。</li>
+                </ul>
+                <p>同样，稳定精确的 Vref 对 DAC 的输出精度至关重要。</p>
+            </div>
+
+             <div class="concept">
+                <h3>7.3 转换速率与建立时间 (Settling Time)</h3>
+                <p>DAC 将数字值转换为模拟电压需要一定的时间。<strong>建立时间</strong>是指从数字输入改变到模拟输出稳定在目标电压的一小段误差范围内所需的时间。这限制了 DAC 能够产生的模拟信号的最大频率。</p>
+            </div>
+
+            <div class="concept">
+                <h3>7.4 输出缓冲 (Output Buffer)</h3>
+                <p>许多 DAC 内部集成了一个输出缓冲器（运算放大器）。启用输出缓冲可以：</p>
+                <ul>
+                    <li><strong>提高驱动能力：</strong> 使 DAC 能够驱动一定的负载（比如直接驱动小阻抗的负载或后续电路），而不会导致电压下降。</li>
+                    <li><strong>降低输出阻抗：</strong> 提供更稳定的输出电压。</li>
+                </ul>
+                <p>在 CubeMX 中通常可以选择是否启用 DAC 通道的输出缓冲。</p>
+            </div>
+        </section>
+
+        <section id="dac-dma-sine" class="code-explanation-section">
+            <h2><span class="icon">🌊</span> 8. DAC + DMA 输出正弦波：绘制平滑曲线</h2>
+            <p>DAC 的一个常见应用是产生任意波形，比如平滑的正弦波。如果让 CPU 频繁计算正弦值并手动更新 DAC 输出，会非常耗费 CPU 资源且难以保证输出频率的精确和稳定。这时，再次请出我们的老朋友：<strong>定时器</strong> 和 <strong>DMA</strong>。</p>
+            <p>思路与 ADC 的定时器触发采样类似，但方向相反：</p>
+            <ol>
+                <li><strong>生成波形查找表 (Lookup Table - LUT):</strong> 在内存中预先计算并存储一个完整周期的正弦波对应的离散数字值（例如 100 个点），形成一个数组。</li>
+                <li><strong>定时器作为"节拍器":</strong> 配置一个定时器（如 TIM6 或 TIM7，它们通常有连接到 DAC 的触发输出）以固定的频率产生触发信号 (TRGO)。这个频率决定了输出正弦波的<strong>频率</strong>。</li>
+                <li><strong>DAC 听从"节拍器"指挥:</strong> 配置 DAC，使其由定时器的 TRGO 事件触发转换。</li>
+                <li><strong>DMA 自动"喂数据":</strong> 配置 DMA 通道，在每次接收到定时器触发信号后，自动从内存中的正弦波查找表里取出<strong>下一个</strong>样本点，写入 DAC 的数据保持寄存器 (DHR)。DMA 设置为循环模式，当读取完查找表的最后一个点后，自动回到开头继续读取，从而循环输出正弦波。</li>
+                <li><strong>CPU "袖手旁观":</strong> 一旦初始化完成，整个波形输出过程完全由 定时器 + DAC + DMA 硬件自动完成，CPU 基本无需干预。</li>
+            </ol>
+            <p><strong>类比：</strong> 你预先把一首歌的乐谱 (正弦波查找表) 交给一个自动翻页机 (DMA)。然后设置一个节拍器 (Timer) 控制一个演奏机器人 (DAC)。节拍器每响一次，自动翻页机就把乐谱的下一个音符喂给机器人，机器人立刻演奏出来。整个过程自动化进行，你只需要在开始时启动它们。</p>
+
+            <div class="code-subsection">
+                <h3>8.1 "绘制乐谱"：生成正弦波查找表</h3>
+                <p>首先，我们需要用代码生成包含正弦波数据的数组。以下代码来自 `adc_app.c`：</p>
+                <pre><code class="language-c hljs">// --- 全局变量 --- 
+#define SINE_SAMPLES 100    // 一个周期内的采样点数
+#define DAC_MAX_VALUE 4095 // 12 位 DAC 的最大数字值 (2^12 - 1)
+
+uint16_t SineWave[SINE_SAMPLES]; // 存储正弦波数据的数组
+
+// --- 生成正弦波数据的函数 ---
+/**
+ * @brief 生成正弦波查找表
+ * @param buffer: 存储波形数据的缓冲区指针
+ * @param samples: 一个周期内的采样点数
+ * @param amplitude: 正弦波的峰值幅度 (相对于中心值)
+ * @param phase_shift: 相位偏移 (弧度)
+ * @retval None
+ */
+void Generate_Sine_Wave(uint16_t* buffer, uint32_t samples, uint16_t amplitude, float phase_shift)
+{
+  // 计算每个采样点之间的角度步进 (2*PI / samples)
+  float step = 2.0f * 3.14159f / samples; 
+  
+  for(uint32_t i = 0; i < samples; i++)
+  {
+    // 计算当前点的正弦值 (-1.0 到 1.0)
+    float sine_value = sinf(i * step + phase_shift); // 使用 sinf 提高效率
+
+    // 将正弦值映射到 DAC 的输出范围 (0 - 4095)
+    // 1. 将 (-1.0 ~ 1.0) 映射到 (-amplitude ~ +amplitude)
+    // 2. 加上中心值 (DAC_MAX_VALUE / 2)，将范围平移到 (Center-amp ~ Center+amp)
+    buffer[i] = (uint16_t)((sine_value * amplitude) + (DAC_MAX_VALUE / 2.0f));
+    
+    // 确保值在有效范围内 (钳位)
+    if (buffer[i] > DAC_MAX_VALUE) buffer[i] = DAC_MAX_VALUE;
+    // 由于浮点计算精度问题，理论上不需要检查下限，但加上更健壮
+    // else if (buffer[i] < 0) buffer[i] = 0; 
+  }
+}
+</code></pre>
+                <p>逻辑分解：</p>
+                <ol>
+                    <li><strong>参数定义:</strong> `samples` 决定了波形的平滑度（点数越多越平滑），`amplitude` 控制了波形的峰值（相对于中心值），`phase_shift` 可以调整波形的起始相位。</li>
+                    <li><strong>计算步进:</strong> `step` 计算出每个采样点对应的角度增量。</li>
+                    <li><strong>循环计算:</strong> 遍历所有采样点。
+                        <ul>
+                            <li>使用 `sinf()` 函数 (单精度浮点正弦，通常比 `sin()` 快) 计算当前点的正弦值 (-1.0 到 1.0)。</li>
+                            <li><strong>映射与平移:</strong> 这是关键。将 `sine_value` 乘以 `amplitude` 得到幅度缩放后的值。然后加上 `DAC_MAX_VALUE / 2.0f` (中心值，大约是 2047.5)，将波形整体向上平移，使其中心对准 DAC 输出范围的中点。最终结果被转换为 `uint16_t`。</li>
+                             <li><strong>钳位 (Clamping) (可选但推荐):</strong> 由于浮点计算可能存在微小误差，最好检查计算结果是否超出 DAC 的有效范围 (0 ~ 4095)，如果超出则强制限制在边界值。</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+             <div class="code-subsection">
+                <h3>8.2 配置定时器、DAC 和 DMA</h3>
+                <p>这一步同样通常在 CubeMX 中完成：</p>
+                <p><strong>CubeMX 配置步骤:</strong></p>
+                <ol>
+                    <li><strong>配置定时器 (如 TIM6):</strong>
+                        <ul>
+                            <li>启用定时器，设置时钟源。</li>
+                            <li>计算并设置 Prescaler (PSC) 和 Period (ARR) 以获得所需的<strong>采样点输出频率</strong> (注意：这<strong>不是</strong>最终的正弦波频率)。<br>
+                                <strong>重要关系：</strong> <code>正弦波频率 = 定时器触发频率 / 每个周期的采样点数</code><br>
+                                例如，要输出 1kHz 的正弦波，且查找表有 100 个点 (`SINE_SAMPLES = 100`)，则定时器的触发频率需要是 <code>1kHz * 100 = 100kHz</code>。
+                                你需要根据你的系统时钟计算出能产生 100kHz 触发频率的 PSC 和 ARR 组合。</li>
+                            <li>将 Trigger Output (TRGO) 设置为 "Update Event"。</li>
+                        </ul>
+                    </li>
+                    <li><strong>配置 DAC:</strong>
+                        <ul>
+                            <li>启用 DAC 通道 (如 Channel 1)。</li>
+                            <li>设置 Output Buffer 为 Enable (通常推荐)。</li>
+                            <li>设置 Trigger 为触发 DAC 的那个定时器的 TRGO 事件，例如 "Timer 6 Trigger Out event"。</li>
+                        </ul>
+                    </li>
+                    <li><strong>配置 DMA (在 DAC 的 DMA Settings 页):</strong>
+                        <ul>
+                            <li>为 DAC 通道添加 DMA 请求 (Add DMA Request)，选择一个 DMA 通道。</li>
+                            <li>设置 Direction 为 <strong>Memory to Peripheral</strong> (数据从内存流向外设)。</li>
+                            <li>设置 Mode 为 <strong>Circular</strong> (循环读取查找表)。</li>
+                            <li>设置 Peripheral 和 Memory 的 Data Width：
+                                <ul>
+                                    <li>Peripheral 通常是 <strong>Half Word (16位)</strong>，因为 DAC 数据寄存器通常只需要写入 12 位或 8 位。</li>
+                                    <li>Memory 通常也设置为 <strong>Half Word (16位)</strong>，以匹配我们 `uint16_t SineWave[]` 数组的元素大小。</li>
+                                </ul>
+                            </li>
+                             <li>确保 Memory 地址是递增的 (Increment Address: Memory)。</li>
+                             <li>Peripheral 地址不递增 (Increment Address: Peripheral - <strong>Disabled</strong>)。</li>
+                        </ul>
+                    </li>
+                    <li><strong>NVIC 配置：</strong> 对于纯 DAC 输出，通常<strong>不需要</strong>启用 DAC 或 DMA 的中断。</li>
+                </ol>
+                 <div class="explanation-note">
+                     <span class="icon">💡</span>
+                     <div><strong>DMA 数据宽度说明：</strong> 注意这里与 ADC 的 DMA 配置不同。因为 DAC 数据寄存器通常只需要写入有效数据位（如 12 位），并且我们的查找表是 <code>uint16_t</code> 类型，所以 DMA 的外设和内存宽度都设置为 Half Word (16位) 是最自然、最高效的配置。</div>
+                 </div>
+            </div>
+
+            <div class="code-subsection">
+                <h3>8.3 "启动自动演奏"：代码实现</h3>
+                <p>完成配置后，只需要在代码中调用生成函数和启动函数即可：</p>
+                <pre><code class="language-c hljs">// --- 初始化函数 (在 main 函数或外设初始化后调用) ---
+void dac_sin_init(void)
+{
+    // 1. 生成正弦波查找表数据
+    //     amplitude = DAC_MAX_VALUE / 2 产生最大幅度的波形 (0-4095)
+    Generate_Sine_Wave(SineWave, SINE_SAMPLES, DAC_MAX_VALUE / 2, 0.0f);
+    
+    // 2. 启动触发 DAC 的定时器 (例如 TIM6)
+    HAL_TIM_Base_Start(&htim6); // htim6 是 TIM6 的句柄
+    
+    // 3. 启动 DAC 通道并通过 DMA 输出查找表数据
+    //    hdac: DAC 句柄
+    //    DAC_CHANNEL_1: 要使用的 DAC 通道
+    //    (uint32_t *)SineWave: 查找表起始地址 (HAL 库常需 uint32_t*)
+    //    SINE_SAMPLES: 查找表中的点数 (DMA 传输单元数)
+    //    DAC_ALIGN_12B_R: 数据对齐方式 (12 位右对齐)
+    HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t *)SineWave, SINE_SAMPLES, DAC_ALIGN_12B_R);
+}
+
+// --- 无需后台处理任务 --- 
+// 一旦 dac_sin_init 调用完成，硬件会自动循环输出波形
+// adc_task() 中可以移除 dac 相关的处理
+</code></pre>
+                <p>逻辑分解：</p>
+                <ol>
+                    <li><strong><code>Generate_Sine_Wave(...)</code>:</strong> 调用我们之前定义的函数，填充 `SineWave` 数组。这里设置 `amplitude` 为 `DAC_MAX_VALUE / 2`，使得生成的波形能覆盖 DAC 的整个输出范围 (近似 0V 到 Vref)。</li>
+                    <li><strong><code>HAL_TIM_Base_Start(&htim6);</code>:</strong> 启动作为触发源的定时器。定时器会按照预设频率开始产生 TRGO 信号。</li>
+                    <li><strong><code>HAL_DAC_Start_DMA(...)</code>:</strong> 这是启动 DAC 输出的关键。它会：
+                        <ul>
+                            <li>启用指定的 DAC 通道 (<code>DAC_CHANNEL_1</code>)。</li>
+                            <li>配置并启动 DMA 通道，使其源地址指向 <code>SineWave</code> 数组的开头，目标地址指向 DAC 的数据寄存器。</li>
+                            <li>DMA 会在每次接收到定时器触发信号时，从 <code>SineWave</code> 数组读取一个 <code>uint16_t</code> 值（因为配置为 Half Word），根据指定的对齐方式 (<code>DAC_ALIGN_12B_R</code> - 12 位右对齐) 写入 DAC 数据寄存器。</li>
+                            <li>由于 DMA 设置为循环模式，读取完 <code>SINE_SAMPLES</code> 个点后会自动回到数组开头，无限循环。</li>
+                        </ul>
+                    </li>
+                </ol>
+                <p>之后，无需 CPU 干预，DAC 就会在定时器的精确控制下，通过 DMA 持续输出流畅的正弦波信号了！</p>
+            </div>
+        </section>
+
+        <!-- ==================== HAL API Deep Dive ==================== -->
+
+        <section id="hal-api-deep-dive" class="code-explanation-section">
+            <h2><span class="icon">📚</span> 9. 深入 HAL 库 API：掌控 AD/DA 操作</h2>
+            <p>前面我们通过实例了解了 AD/DA 转换的几种常用方法。这些方法的实现都离不开 STMicroelectronics 提供的 HAL (Hardware Abstraction Layer) 库。HAL 库封装了底层的寄存器操作，提供了统一、易用的 API 接口。理解这些核心 API 对于灵活运用 AD/DA 功能至关重要。本节将深入探讨我们在之前章节中使用到的关键 HAL 函数和宏。</p>
+
+            <div class="api-subsection">
+                <h3>9.1 ADC 相关 API</h3>
+
+                <div class="api-item">
+                    <h4><span class="icon">⚙️</span> <code>ADC_HandleTypeDef</code> (句柄)</h4>
+                    <p>这是 ADC 外设的"身份证"和"控制器"。它是一个结构体，包含了 ADC 的配置信息（如分辨率、模式、触发源等）、运行时状态、错误代码以及指向 DMA 通道句柄的指针（如果使用了 DMA）。所有 ADC 相关的 HAL 函数都需要传递一个指向该类型结构体的指针作为第一个参数（例如 `&hadc1`）。该结构体通常由 CubeMX 自动生成和初始化。</p>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">▶️</span> <code>HAL_StatusTypeDef HAL_ADC_Start(ADC_HandleTypeDef* hadc)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 启动 ADC 转换。在轮询法或中断法中用于启动单次或连续转换（取决于 CubeMX 配置）。</li>
+                        <li><strong>参数:</strong> <code>hadc</code> - 指向 ADC 句柄的指针。</li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code> (成功), <code>HAL_ERROR</code>, <code>HAL_BUSY</code>。</li>
+                        <li><strong>说明:</strong> 在第 4 节轮询法中，我们使用它来启动每一次手动的 ADC 转换。</li>
+                    </ul>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">⏸️</span> <code>HAL_StatusTypeDef HAL_ADC_Stop(ADC_HandleTypeDef* hadc)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 停止 ADC 转换。主要用于停止连续转换模式下的 ADC。</li>
+                        <li><strong>参数:</strong> <code>hadc</code> - 指向 ADC 句柄的指针。</li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code>, <code>HAL_ERROR</code>, <code>HAL_BUSY</code>。</li>
+                        <li><strong>说明:</strong> 在第 4 节轮询法中提到，如果 ADC 配置为连续转换模式，可能需要在读取值后调用此函数停止转换。</li>
+                    </ul>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">⏳</span> <code>HAL_StatusTypeDef HAL_ADC_PollForConversion(ADC_HandleTypeDef* hadc, uint32_t Timeout)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 以阻塞方式等待 ADC 转换完成。它会不断检查 ADC 状态寄存器中的 EOC (End of Conversion) 标志位。</li>
+                        <li><strong>参数:</strong>
+                            <ul>
+                                <li><code>hadc</code>: 指向 ADC 句柄的指针。</li>
+                                <li><code>Timeout</code>: 等待超时时间（毫秒）。如果超时仍未完成，则返回 `HAL_TIMEOUT`。</li>
+                            </ul>
+                        </li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code> (转换完成), <code>HAL_TIMEOUT</code>, <code>HAL_ERROR</code>。</li>
+                        <li><strong>说明:</strong> 这是第 4 节轮询法的核心，用于"守株待兔"式地等待转换结果，但会阻塞 CPU。</li>
+                    </ul>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">🔢</span> <code>uint32_t HAL_ADC_GetValue(ADC_HandleTypeDef* hadc)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 读取 ADC 转换的结果。</li>
+                        <li><strong>参数:</strong> <code>hadc</code> - 指向 ADC 句柄的指针。</li>
+                        <li><strong>返回:</strong> ADC 数据寄存器中的转换结果（通常是 0 到 4095 对于 12 位 ADC）。</li>
+                        <li><strong>说明:</strong> 在第 4 节轮询法中，当 `HAL_ADC_PollForConversion` 返回 `HAL_OK` 后，调用此函数获取数字值。</li>
+                    </ul>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">🚚</span> <code>HAL_StatusTypeDef HAL_ADC_Start_DMA(ADC_HandleTypeDef* hadc, uint32_t* pData, uint32_t Length)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 以 DMA 模式启动 ADC 转换。ADC 转换的结果将由 DMA 控制器自动传输到指定的内存缓冲区。</li>
+                        <li><strong>参数:</strong>
+                            <ul>
+                                <li><code>hadc</code>: 指向 ADC 句柄的指针。</li>
+                                <li><code>pData</code>: 指向存储转换结果的内存缓冲区的指针。<strong>注意：</strong> HAL 库通常要求此指针为 <code>uint32_t*</code> 类型，即使你定义的缓冲区是 <code>uint16_t</code> 类型，也需要进行强制类型转换 `(uint32_t*)your_buffer`。这与 DMA 配置为 Word 传输有关（详见第 5 节解释）。</li>
+                                <li><code>Length</code>: DMA 单次传输的数据量（对于循环模式，这是缓冲区的大小）。</li>
+                            </ul>
+                        </li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code>, <code>HAL_ERROR</code>, <code>HAL_BUSY</code>。</li>
+                        <li><strong>说明:</strong> 这是第 5 节 (DMA 轮询) 和第 6 节 (TIM+DMA+IT) 实现 ADC 数据自动搬运的核心函数。一旦启动（且 DMA 配置为循环模式），数据传输会自动进行。</li>
+                    </ul>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">🛑</span> <code>HAL_StatusTypeDef HAL_ADC_Stop_DMA(ADC_HandleTypeDef* hadc)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 停止以 DMA 模式运行的 ADC 转换和相应的 DMA 传输。</li>
+                        <li><strong>参数:</strong> <code>hadc</code> - 指向 ADC 句柄的指针。</li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code>, <code>HAL_ERROR</code>, <code>HAL_BUSY</code>。</li>
+                        <li><strong>说明:</strong> 虽然在之前的示例中未显式调用，但在需要停止 DMA 驱动的 ADC 采集时使用此函数。</li>
+                    </ul>
+                </div>
+
+                 <div class="api-item">
+                    <h4><span class="icon">🔔</span> <code>void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)</code> (回调函数)</h4>
+                    <ul>
+                        <li><strong>用途:</strong> 这是一个弱定义 (weak) 的回调函数，当 ADC 转换完成（在中断模式下）或 DMA 传输完成（在 DMA 模式下，完成整个缓冲区传输）时，由 HAL 库的中断处理程序调用。</li>
+                        <li><strong>参数:</strong> <code>hadc</code> - 触发回调的 ADC 句柄指针。</li>
+                        <li><strong>说明:</strong> 在第 6 节 (TIM+DMA+IT) 中，我们在用户代码中重新实现了这个函数。当 DMA 完成将 `adc_dma_buffer` 填满时，此回调被触发，我们在其中将数据拷贝到处理缓冲区 `adc_processing_buffer` 并设置标志位 `adc_data_ready_flag`。这是实现采样与处理解耦的关键。</li>
+                    </ul>
+                 </div>
+                 <div class="api-item">
+                    <h4><span class="icon">☑️</span> <code>__HAL_DMA_DISABLE_IT(&hdma_adc1, DMA_IT_HT)</code> (宏)</h4>
+                    <ul>
+                        <li><strong>用途:</strong> 禁用指定的 DMA 中断。这是一个宏，直接操作 DMA 控制器的寄存器。</li>
+                        <li><strong>参数:</strong>
+                            <ul>
+                                <li><code>&hdma_adc1</code>: 指向与 ADC 关联的 DMA 通道句柄的指针 (需要根据实际项目中的 DMA 句柄名称修改)。</li>
+                                <li><code>DMA_IT_HT</code>: 指定要禁用的中断类型，这里是半传输 (Half Transfer) 中断。其他常用类型包括 `DMA_IT_TC` (全传输完成), `DMA_IT_TE` (传输错误)。</li>
+                            </ul>
+                        </li>
+                        <li><strong>说明:</strong> 在第 6 节简化示例中，我们只关心全传输完成中断 (TC)，所以显式调用此宏来禁用半传输中断 (HT)，防止它意外触发回调函数或中断。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="api-subsection">
+                <h3>9.2 DAC 相关 API</h3>
+
+                <div class="api-item">
+                    <h4><span class="icon">⚙️</span> <code>DAC_HandleTypeDef</code> (句柄)</h4>
+                    <p>与 ADC 类似，这是 DAC 外设的句柄结构体，包含了 DAC 的配置信息、状态等。所有 DAC 相关的 HAL 函数都需要传递指向该类型结构体的指针（例如 `&hdac`）。同样通常由 CubeMX 生成和初始化。</p>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">▶️</span> <code>HAL_StatusTypeDef HAL_DAC_Start(DAC_HandleTypeDef* hdac, uint32_t Channel)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 启动指定的 DAC 通道。</li>
+                        <li><strong>参数:</strong>
+                            <ul>
+                                <li><code>hdac</code>: 指向 DAC 句柄的指针。</li>
+                                <li><code>Channel</code>: 要启动的 DAC 通道，例如 <code>DAC_CHANNEL_1</code> 或 <code>DAC_CHANNEL_2</code> (取决于具体型号)。</li>
+                            </ul>
+                        </li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code>, <code>HAL_ERROR</code>。</li>
+                        <li><strong>说明:</strong> 在非 DMA 模式下控制 DAC 时使用。</li>
+                    </ul>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">⏸️</span> <code>HAL_StatusTypeDef HAL_DAC_Stop(DAC_HandleTypeDef* hdac, uint32_t Channel)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 停止指定的 DAC 通道。</li>
+                        <li><strong>参数:</strong>
+                            <ul>
+                                <li><code>hdac</code>: 指向 DAC 句柄的指针。</li>
+                                <li><code>Channel</code>: 要停止的 DAC 通道。</li>
+                            </ul>
+                        </li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code>, <code>HAL_ERROR</code>。</li>
+                        <li><strong>说明:</strong> 在非 DMA 模式下停止 DAC 输出时使用。</li>
+                    </ul>
+                </div>
+
+                 <div class="api-item">
+                    <h4><span class="icon">✍️</span> <code>HAL_StatusTypeDef HAL_DAC_SetValue(DAC_HandleTypeDef* hdac, uint32_t Channel, uint32_t Alignment, uint32_t Data)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 手动设置 DAC 通道的输出值。DAC 会将 `Data` 转换为对应的模拟电压。</li>
+                        <li><strong>参数:</strong>
+                            <ul>
+                                <li><code>hdac</code>: 指向 DAC 句柄的指针。</li>
+                                <li><code>Channel</code>: 要设置的 DAC 通道。</li>
+                                <li><code>Alignment</code>: 数据对齐方式。对于 12 位 DAC，常用 <code>DAC_ALIGN_12B_R</code> (右对齐) 或 <code>DAC_ALIGN_12B_L</code> (左对齐)。对于 8 位 DAC，使用 <code>DAC_ALIGN_8B_R</code>。这必须与 CubeMX 中的配置一致。</li>
+                                <li><code>Data</code>: 要写入 DAC 数据保持寄存器的数字值 (例如 0-4095)。</li>
+                            </ul>
+                        </li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code>, <code>HAL_ERROR</code>。</li>
+                        <li><strong>说明:</strong> 这是手动控制 DAC 输出最基本的方式。DMA 模式实际上是硬件自动调用类似此操作的过程。</li>
+                    </ul>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">🚚</span> <code>HAL_StatusTypeDef HAL_DAC_Start_DMA(DAC_HandleTypeDef* hdac, uint32_t Channel, uint32_t* pData, uint32_t Length, uint32_t Alignment)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 以 DMA 模式启动 DAC 通道输出。DMA 会自动从指定的内存缓冲区读取数据，并根据触发信号（通常来自定时器）写入 DAC 数据寄存器。</li>
+                        <li><strong>参数:</strong>
+                            <ul>
+                                <li><code>hdac</code>: 指向 DAC 句柄的指针。</li>
+                                <li><code>Channel</code>: 要使用的 DAC 通道。</li>
+                                <li><code>pData</code>: 指向包含波形数据的内存缓冲区的指针（查找表）。<strong>注意：</strong> 同样，HAL 库常要求此指针为 <code>uint32_t*</code> 类型，即使数据是 <code>uint16_t</code>，如 <code>(uint32_t *)SineWave</code>。</li>
+                                <li><code>Length</code>: 查找表中的数据点数量（DMA 传输单元数）。</li>
+                                <li><code>Alignment</code>: 数据对齐方式，必须与 <code>HAL_DAC_SetValue</code> 和 CubeMX 配置一致，例如 <code>DAC_ALIGN_12B_R</code>。</li>
+                            </ul>
+                        </li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code>, <code>HAL_ERROR</code>, <code>HAL_BUSY</code>。</li>
+                        <li><strong>说明:</strong> 第 8 节输出正弦波的核心函数。它启动了从 `SineWave` 数组到 DAC 的自动数据流。</li>
+                    </ul>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">🛑</span> <code>HAL_StatusTypeDef HAL_DAC_Stop_DMA(DAC_HandleTypeDef* hdac, uint32_t Channel)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 停止以 DMA 模式运行的 DAC 通道和相应的 DMA 传输。</li>
+                        <li><strong>参数:</strong>
+                            <ul>
+                                <li><code>hdac</code>: 指向 DAC 句柄的指针。</li>
+                                <li><code>Channel</code>: 要停止的 DAC 通道。</li>
+                            </ul>
+                        </li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code>, <code>HAL_ERROR</code>, <code>HAL_BUSY</code>。</li>
+                        <li><strong>说明:</strong> 用于停止由 DMA 驱动的 DAC 波形输出。</li>
+                    </ul>
+                </div>
+            </div>
+
+             <div class="api-subsection">
+                <h3>9.3 TIM (定时器) 相关 API</h3>
+
+                <div class="api-item">
+                    <h4><span class="icon">⚙️</span> <code>TIM_HandleTypeDef</code> (句柄)</h4>
+                    <p>定时器外设的句柄结构体，包含了定时器的配置信息（如预分频器 PSC、周期 ARR、时钟源、触发输出 TRGO 设置等）和状态。操作定时器的 HAL 函数需要传递指向该结构体的指针（例如 `&htim3`, `&htim6`）。由 CubeMX 生成和初始化。</p>
+                </div>
+
+                <div class="api-item">
+                    <h4><span class="icon">▶️</span> <code>HAL_StatusTypeDef HAL_TIM_Base_Start(TIM_HandleTypeDef *htim)</code></h4>
+                    <ul>
+                        <li><strong>用途:</strong> 以基本模式（向上或向下计数）启动定时器。</li>
+                        <li><strong>参数:</strong> <code>htim</code> - 指向要启动的定时器句柄的指针。</li>
+                        <li><strong>返回:</strong> <code>HAL_OK</code>, <code>HAL_ERROR</code>。</li>
+                        <li><strong>说明:</strong> 在第 6 节 (ADC 的 TIM+DMA+IT) 和第 8 节 (DAC 的 DMA 正弦波) 中，我们使用此函数启动作为 ADC 或 DAC 触发源 (TRGO) 的定时器（如 TIM3 或 TIM6）。定时器启动后，会按照配置的频率产生更新事件，进而触发 ADC 转换或 DMA 传输到 DAC。</li>
+                    </ul>
+                </div>
+                <!-- 可以根据需要补充其他 TIM 函数，如 HAL_TIM_Base_Stop, HAL_TIM_Base_Start_IT 等 -->
+            </div>
+
+            <div class="api-subsection">
+                <h3>9.4 DMA 相关</h3>
+                 <div class="api-item">
+                    <h4><span class="icon">⚙️</span> <code>DMA_HandleTypeDef</code> (句柄)</h4>
+                    <p>DMA 通道的句柄结构体。它包含了特定 DMA 通道的配置（如传输方向、外设/内存地址、数据宽度、模式 - 循环/普通、优先级等）和状态。虽然在我们的 ADC/DAC 应用代码中可能不直接声明或操作独立的 DMA 句柄变量（因为它通常被链接在 ADC 或 DAC 句柄内部，由 CubeMX 配置），但理解它的存在和配置对于排查 DMA 问题至关重要。例如，`__HAL_DMA_DISABLE_IT` 宏就需要传递 DMA 句柄的地址。</p>
+                </div>
+            </div>
+
+            <p class="important-note" style="margin-top: 2em;"><span class="icon">💡</span> HAL 库提供了丰富的功能，远不止这些。查阅 ST 官方提供的对应系列 MCU 的 HAL 库用户手册是深入学习和掌握更多高级功能的最佳途径。</p>
+        </section>
+
+        <!-- 后续章节将在此添加 -->
+
+    </main>
+
+    <footer>
+        <p>&copy; 2024 米醋电子工作室. All rights reserved. | <a href="#">回到顶部</a></p>
+    </footer>
+
+    <!-- 引入交互脚本 (如果需要) -->
+    <!-- <script src="script.js"></script> -->
+    <script>hljs.highlightAll();</script>
+
+    <!-- 定时器计算器脚本 -->
+    <script>
+        const calculateBtn = document.getElementById('calculateBtn');
+        const sysClkInput = document.getElementById('sysClkInput');
+        const targetFreqInput = document.getElementById('targetFreqInput');
+        const calcResult = document.getElementById('calcResult');
+
+        calculateBtn.addEventListener('click', () => {
+            const sysClkMHz = parseFloat(sysClkInput.value);
+            const targetFreqHz = parseFloat(targetFreqInput.value);
+            calcResult.textContent = ''; // 清空上次结果
+
+            if (isNaN(sysClkMHz) || sysClkMHz <= 0 || isNaN(targetFreqHz) || targetFreqHz <= 0) {
+                calcResult.textContent = '错误：请输入有效的正数作为时钟频率和目标频率。';
+                return;
+            }
+
+            const timerClkHz = sysClkMHz * 1000000;
+            const totalDiv = Math.round(timerClkHz / targetFreqHz);
+            
+            if (totalDiv <= 0) {
+                 calcResult.textContent = '错误：计算得到的总分频系数无效。';
+                 return;
+            }
+
+            let bestPsc = -1;
+            let bestArr = -1;
+            let found = false;
+
+            // 优先尝试目标计数器频率为 1MHz 的情况
+            let currentPsc = Math.max(0, sysClkMHz - 1);
+            if (totalDiv % (currentPsc + 1) === 0) {
+                let currentArr = (totalDiv / (currentPsc + 1)) - 1;
+                if (currentArr >= 0 && currentArr <= 65535 && Number.isInteger(currentArr)) {
+                    bestPsc = currentPsc;
+                    bestArr = currentArr;
+                    found = true;
+                }
+            }
+
+            // 如果 1MHz 方案无效或不可行，则尝试寻找其他有效的 PSC
+            if (!found) {
+                // 从最小的 PSC 开始尝试增加
+                for (let psc = 0; psc <= 65535; psc++) {
+                     const pscPlus1 = psc + 1;
+                     if (totalDiv % pscPlus1 === 0) {
+                        const arrPlus1 = totalDiv / pscPlus1;
+                        const arr = arrPlus1 - 1;
+                        if (arr >= 0 && arr <= 65535 && Number.isInteger(arr)) {
+                            bestPsc = psc;
+                            bestArr = arr;
+                            found = true;
+                            break; // 找到第一个有效的就停止
+                        }
+                     }
+                     // 优化：如果 arr 开始小于 0，则后续也不可能大于等于0，可以停止
+                     if (totalDiv / pscPlus1 < 1) break;
+                }
+            }
+            
+            if (found) {
+                const counterClk = timerClkHz / (bestPsc + 1);
+                const actualFreq = counterClk / (bestArr + 1);
+                // 使用更结构化的 HTML 输出结果
+                calcResult.innerHTML = 
+                    `<div class="result-line"><strong>推荐参数:</strong></div>
+                     <div class="result-line">- Prescaler (PSC): <span class="result-value">${bestPsc}</span></div>
+                     <div class="result-line">- Period (ARR): <span class="result-value">${bestArr}</span></div>
+                     <div class="result-details"> (计数器时钟: ${counterClk.toLocaleString()} Hz, 实际触发频率: ${actualFreq.toLocaleString()} Hz)</div>`;
+                // 移除可能存在的错误样式
+                calcResult.classList.remove('error-message');
+            } else {
+                calcResult.textContent = `错误：无法在 16 位限制内找到合适的 PSC 和 ARR 组合以达到目标频率 ${targetFreqHz.toLocaleString()} Hz。请尝试调整目标频率或检查系统时钟。`;
+                // 添加错误样式
+                calcResult.classList.add('error-message');
+            }
+        });
+    </script>
+    <!-- 脚本结束 -->
+</body>
+</html> 
