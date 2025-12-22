@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>嵌入式系统工程框架搭建 - 米醋电子工作室</title>
+    <style>
+        /* 全局样式 */
+        :root {
+            --apple-white: #FFFFFF;
+            --apple-gray: #F5F5F7;
+            --apple-blue: #0066CC;
+            --apple-dark: #1D1D1F;
+            --apple-light-text: #86868B;
+            --apple-highlight: #0071E3;
+            --transition-smooth: all 0.5s cubic-bezier(0.42, 0, 0.58, 1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        body {
+            background-color: var(--apple-white);
+            color: var(--apple-dark);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--apple-gray);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #BFBFBF;
+            border-radius: 4px;
+        }
+        
+        /* 导航栏 */
+        .nav-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: var(--transition-smooth);
+        }
+        
+        .nav-bar {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--apple-dark);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-link {
+            color: var(--apple-dark);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition-smooth);
+        }
+        
+        .nav-link:hover {
+            color: var(--apple-blue);
+        }
+        
+        /* 主要内容 */
+        .main-container {
+            max-width: 1200px;
+            margin: 80px auto 0;
+            padding: 20px;
+        }
+        
+        .hero-section {
+            margin: 50px 0 80px;
+            text-align: center;
+            position: relative;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInUp 1s forwards;
+        }
+        
+        .hero-subtitle {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 30px;
+            color: var(--apple-light-text);
+            animation: fadeInUp 1s forwards 0.2s;
+            opacity: 0;
+        }
+        
+        .hero-description {
+            font-size: 18px;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            animation: fadeInUp 1s forwards 0.4s;
+            opacity: 0;
+        }
+        
+        .hero-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            max-width: 800px;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        /* 章节 */
+        .section-container {
+            margin: 100px 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: var(--transition-smooth);
+        }
+        
+        .section-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+        
+        .section-number {
+            font-size: 64px;
+            font-weight: 700;
+            color: var(--apple-gray);
+            line-height: 1;
+        }
+        
+        .section-title-container {
+            flex: 1;
+        }
+        
+        .section-title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--apple-dark);
+        }
+        
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--apple-light-text);
+        }
+        
+        .section-content {
+            padding: 0 0 0 80px;
+        }
+        
+        /* 卡片 */
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .card {
+            background-color: var(--apple-white);
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            transition: var(--transition-smooth);
+            transform: translateY(0);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-icon {
+            font-size: 30px;
+            margin-bottom: 15px;
+            color: var(--apple-blue);
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .card-content {
+            font-size: 15px;
+            color: var(--apple-light-text);
+        }
+        
+        /* 按钮 */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--apple-highlight);
+            color: white;
+            border-radius: 30px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition-smooth);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        
+        .btn:hover {
+            background-color: #005BBF;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 102, 204, 0.2);
+        }
+        
+        /* 交互组件 */
+        .interactive-demo {
+            background-color: var(--apple-gray);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+        
+        .tab.active {
+            color: var(--apple-blue);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--apple-blue);
+            animation: tabIndicator 0.3s forwards;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 时钟动画 */
+        .clock-container {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            margin: 0 auto;
+        }
+        
+        .clock {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .clock-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background-color: var(--apple-dark);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .clock-hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            background-color: var(--apple-dark);
+            border-radius: 10px;
+        }
+        
+        .hour-hand {
+            width: 4px;
+            height: 25%;
+            transform: translateX(-50%) rotate(0deg);
+        }
+        
+        .minute-hand {
+            width: 3px;
+            height: 35%;
+            transform: translateX(-50%) rotate(0deg);
+        }
+        
+        .second-hand {
+            width: 2px;
+            height: 40%;
+            background-color: var(--apple-blue);
+            transform: translateX(-50%) rotate(0deg);
+        }
+        
+        /* 步骤列表 */
+        .steps-container {
+            position: relative;
+            margin: 40px 0;
+        }
+        
+        .step-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 15px;
+            width: 2px;
+            background-color: rgba(0, 0, 0, 0.1);
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform 1.5s;
+        }
+        
+        .step-line.visible {
+            transform: scaleY(1);
+        }
+        
+        .step {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--apple-blue);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+            transform: scale(0);
+            transition: transform 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+        }
+        
+        .step.visible .step-number {
+            transform: scale(1);
+        }
+        
+        .step-content {
+            flex: 1;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.5s ease 0.2s;
+        }
+        
+        .step.visible .step-content {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .step-description {
+            font-size: 15px;
+            color: var(--apple-light-text);
+        }
+        
+        /* 可折叠内容 */
+        .collapsible-container {
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            margin: 15px 0;
+            background-color: white;
+            overflow: hidden;
+        }
+        
+        .collapsible-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        
+        .collapsible-header:hover {
+            background-color: var(--apple-gray);
+        }
+        
+        .collapsible-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .collapsible-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+        
+        .collapsible-icon::before,
+        .collapsible-icon::after {
+            content: '';
+            position: absolute;
+            background-color: var(--apple-dark);
+            transition: var(--transition-smooth);
+        }
+        
+        .collapsible-icon::before {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+        
+        .collapsible-icon::after {
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            transform: translateX(-50%);
+        }
+        
+        .collapsible-container.open .collapsible-icon::after {
+            transform: translateX(-50%) scaleY(0);
+        }
+        
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0, 1, 0, 1);
+        }
+        
+        .collapsible-container.open .collapsible-content {
+            max-height: 1000px;
+            transition: max-height 1s ease-in-out;
+        }
+        
+        .collapsible-body {
+            padding: 0 20px 20px;
+        }
+        
+        /* 对比图 */
+        .comparison-container {
+            display: flex;
+            gap: 20px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        
+        .comparison-item {
+            flex: 1;
+            min-width: 300px;
+            padding: 25px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: var(--transition-smooth);
+        }
+        
+        .comparison-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .comparison-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--apple-blue);
+        }
+        
+        .comparison-list {
+            list-style-type: none;
+        }
+        
+        .comparison-list li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .comparison-list li::before {
+            content: '';
+            position: absolute;
+            top: 7px;
+            left: 0;
+            width: 12px;
+            height: 12px;
+            background-color: var(--apple-blue);
+            opacity: 0.2;
+            border-radius: 50%;
+        }
+        
+        /* 图表 */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 40px 0;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+        }
+        
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes tabIndicator {
+            from {
+                transform: scaleX(0);
+            }
+            to {
+                transform: scaleX(1);
+            }
+        }
+        
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .section-number {
+                font-size: 40px;
+            }
+            
+            .section-title {
+                font-size: 24px;
+            }
+            
+            .section-content {
+                padding: 0;
+            }
+            
+            .hero-title {
+                font-size: 32px;
+            }
+            
+            .hero-subtitle {
+                font-size: 20px;
+            }
+            
+            .interactive-demo {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div class="nav-container">
+        <div class="nav-bar">
+            <a href="#" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#0066CC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 6V12L16 14" stroke="#0066CC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                米醋电子工作室
+            </a>
+            <div class="nav-links">
+                <a href="#clock" class="nav-link">时钟配置</a>
+                <a href="#sys" class="nav-link">SYS配置</a>
+                <a href="#project" class="nav-link">工程配置</a>
+                <a href="#nvic" class="nav-link">NVIC配置</a>
+                <a href="#keil" class="nav-link">Keil配置</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 主要内容 -->
+    <div class="main-container">
+        <!-- 英雄区 -->
+        <div class="hero-section">
+            <h1 class="hero-title">嵌入式系统工程框架搭建</h1>
+            <p class="hero-subtitle">从零开始，构建稳健的STM32开发环境</p>
+            <p class="hero-description">本教程将带您深入理解嵌入式系统的工程框架搭建过程，掌握从时钟配置到工程代码组织的全过程，打造专业的嵌入式开发基础。</p>
+        </div>
+        
+        <!-- 时钟配置部分 -->
+        <div id="clock" class="section-container">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <div class="section-title-container">
+                    <h2 class="section-title">时钟配置</h2>
+                    <p class="section-subtitle">精准的时间控制是嵌入式系统的基石</p>
+                </div>
+            </div>
+            
+            <div class="section-content">
+                <p>时钟是嵌入式系统中的核心元素，它决定了芯片的运行速度和性能。正确配置时钟不仅能提升系统性能，还能降低功耗，延长设备寿命。</p>
+                
+                <div class="interactive-demo">
+                    <div class="tab-container">
+                        <div class="tab active" data-tab="concept">时钟概念</div>
+                        <div class="tab" data-tab="function">时钟作用</div>
+                        <div class="tab" data-tab="configure">配置步骤</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="concept">
+                        <h3>什么是时钟？</h3>
+                        <div style="display: flex; align-items: center; gap: 40px; margin: 30px 0;">
+                            <div style="flex: 1;">
+                                <p>在电子学和微控制器领域，时钟信号是一种周期性变化的电子信号，用于同步系统中的操作和数据传输。时钟信号通常是方波，并具有特定的频率，频率决定了系统的运行速度。</p>
+                                <p style="margin-top: 20px;"><strong>比方：时钟是乐队的节拍器</strong></p>
+                                <p>在微控制器中，时钟就像是乐队中的节拍器。节拍器以固定的频率发出滴答声，指导乐队成员的演奏节奏。同样，时钟信号以固定的频率引导微控制器内部各种操作的执行。</p>
+                            </div>
+                            
+                            <div class="clock-container">
+                                <div class="clock">
+                                    <div class="clock-center"></div>
+                                    <div class="clock-hand hour-hand"></div>
+                                    <div class="clock-hand minute-hand"></div>
+                                    <div class="clock-hand second-hand"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="function">
+                        <h3>时钟的作用</h3>
+                        <div class="card-container">
+                            <div class="card">
+                                <div class="card-icon">⏱️</div>
+                                <h4 class="card-title">同步操作</h4>
+                                <p class="card-content">时钟信号用于同步微控制器内部的各种操作，例如CPU指令的执行、数据的读取和写入等。</p>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-icon">⚡</div>
+                                <h4 class="card-title">确定运行速度</h4>
+                                <p class="card-content">时钟频率直接影响系统的运行速度。较高的时钟频率意味着更快的处理速度，但也意味着更高的功耗。</p>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-icon">🔌</div>
+                                <h4 class="card-title">驱动外设</h4>
+                                <p class="card-content">许多外设（如定时器、USART、SPI等）需要时钟信号来工作。正确的时钟配置确保外设按照预期的速度运行。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="configure">
+                        <h3>配置时钟的主要步骤</h3>
+                        <div class="steps-container">
+                            <div class="step-line"></div>
+                            
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4 class="step-title">选择时钟源</h4>
+                                    <p class="step-description">确定使用内部时钟（HSI/LSI）还是外部时钟（HSE/LSE）。内部时钟提供便捷性，外部时钟提供更高的精度。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4 class="step-title">配置PLL</h4>
+                                    <p class="step-description">通过相位锁定环（PLL）调整时钟频率，生成所需的系统时钟。PLL能够倍频或分频输入时钟，产生更高或更低的频率。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4 class="step-title">设置时钟树</h4>
+                                    <p class="step-description">配置系统时钟、AHB时钟、APB1时钟和APB2时钟，确保各外设时钟频率正确。这是分配时钟资源的关键步骤。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <h4 class="step-title">使能外设时钟</h4>
+                                    <p class="step-description">为需要使用的外设使能时钟信号。只有使能了相应的时钟，外设才能正常工作。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>为什么要配置时钟？</h3>
+                <div class="collapsible-container">
+                    <div class="collapsible-header">
+                        <h4 class="collapsible-title">系统稳定性</h4>
+                        <div class="collapsible-icon"></div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-body">
+                            <p>不同的应用对系统时钟频率有不同的要求。过高或过低的时钟频率都可能导致系统不稳定。通过合理配置时钟，可以确保系统在稳定的条件下运行。</p>
+                            <p><strong>比方：乐队需要稳定的节奏</strong></p>
+                            <p>如果节拍器的速度忽快忽慢，乐队就无法演奏出和谐的音乐。同样，如果微控制器的时钟频率不稳定，系统可能会出错或崩溃。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <div class="collapsible-header">
+                        <h4 class="collapsible-title">性能优化</h4>
+                        <div class="collapsible-icon"></div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-body">
+                            <p>根据应用需求，配置合适的时钟频率可以优化系统性能。对于需要高性能的应用，可以配置较高的时钟频率；对于低功耗应用，则可以配置较低的时钟频率。</p>
+                            <p><strong>比方：调整节拍器速度以适应不同的音乐风格</strong></p>
+                            <p>乐队可能需要根据演奏的音乐风格调整节拍器的速度。快速的节奏适合快歌，慢速的节奏适合慢歌。微控制器也需要根据应用需求调整时钟频率，以达到最佳性能。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <div class="collapsible-header">
+                        <h4 class="collapsible-title">功耗管理</h4>
+                        <div class="collapsible-icon"></div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-body">
+                            <p>时钟频率与系统功耗密切相关。通过调整时钟频率，可以在性能和功耗之间找到平衡点，延长电池寿命或降低能耗。</p>
+                            <p><strong>比方：休息时将节拍器调慢</strong></p>
+                            <p>乐队在休息时会将节拍器调慢或关闭，以节省体力。同样，微控制器在低功耗模式下会降低时钟频率以节省电力。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="collapsible-container">
+                    <div class="collapsible-header">
+                        <h4 class="collapsible-title">外设需求</h4>
+                        <div class="collapsible-icon"></div>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-body">
+                            <p>每个外设都有其特定的时钟要求。例如，USART模块需要一个合适的波特率时钟，ADC模块需要一个稳定的转换时钟。正确配置时钟可以确保外设正常工作。</p>
+                            <p><strong>比方：不同乐器需要不同的节奏</strong></p>
+                            <p>在乐队中，不同的乐器可能需要不同的节奏来演奏。同样，微控制器中的不同外设需要特定的时钟频率才能正常工作。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SYS配置部分 -->
+        <div id="sys" class="section-container">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <div class="section-title-container">
+                    <h2 class="section-title">SYS配置</h2>
+                    <p class="section-subtitle">调试接口的选择与配置</p>
+                </div>
+            </div>
+            
+            <div class="section-content">
+                <p>SYS配置主要涉及调试接口的选择和设置，正确的配置可以确保芯片与调试器的稳定通信，是开发过程中的重要一环。</p>
+                
+                <div class="comparison-container">
+                    <div class="comparison-item">
+                        <h3 class="comparison-title">Serial Wire (SW-DP)</h3>
+                        <ul class="comparison-list">
+                            <li><strong>引脚需求：</strong>仅需2个引脚 (SWCLK, SWDIO)</li>
+                            <li><strong>适用于：</strong>ST-Link调试器</li>
+                            <li><strong>优势：</strong>引脚占用少，速度快</li>
+                            <li><strong>常用性：</strong>使用频率高，推荐首选</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="comparison-item">
+                        <h3 class="comparison-title">JTAG (JTAG-DP)</h3>
+                        <ul class="comparison-list">
+                            <li><strong>引脚需求：</strong>4个引脚（4pin）或5个引脚（5pin，含复位）</li>
+                            <li><strong>适用于：</strong>J-Link等高级调试器</li>
+                            <li><strong>优势：</strong>功能更完整，支持高级调试</li>
+                            <li><strong>常用性：</strong>在复杂应用中使用</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="interactive-demo">
+                    <h3>调试接口选择指南</h3>
+                    <div style="display: flex; align-items: center; gap: 20px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <div class="collapsible-container open">
+                                <div class="collapsible-header">
+                                    <h4 class="collapsible-title">Serial Wire (推荐)</h4>
+                                    <div class="collapsible-icon"></div>
+                                </div>
+                                <div class="collapsible-content">
+                                    <div class="collapsible-body">
+                                        <p>SW调试接口（SW-DP）仅需要两个引脚：</p>
+                                        <ul style="list-style-type: disc; margin-left: 20px; margin-top: 10px;">
+                                            <li><strong>SWCLK：</strong>主机到从机的时钟信号</li>
+                                            <li><strong>SWDIO：</strong>双向数据信号</li>
+                                        </ul>
+                                        <p style="margin-top: 10px;">这种模式下，ST-Link工作最稳定，占用引脚少，是日常开发的首选。</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="collapsible-container">
+                                <div class="collapsible-header">
+                                    <h4 class="collapsible-title">JTAG</h4>
+                                    <div class="collapsible-icon"></div>
+                                </div>
+                                <div class="collapsible-content">
+                                    <div class="collapsible-body">
+                                        <p>JTAG调试接口（JTAG-DP）需要4或5个引脚：</p>
+                                        <ul style="list-style-type: disc; margin-left: 20px; margin-top: 10px;">
+                                            <li><strong>TCK：</strong>测试时钟</li>
+                                            <li><strong>TMS：</strong>测试模式选择</li>
+                                            <li><strong>TDI：</strong>测试数据输入</li>
+                                            <li><strong>TDO：</strong>测试数据输出</li>
+                                            <li><strong>TRST：</strong>测试复位（可选，5pin模式才有）</li>
+                                        </ul>
+                                        <p style="margin-top: 10px;">JTAG适合复杂的调试场景，尤其是在使用J-Link调试器时。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1;">
+                            <div style="background-color: #F9F9F9; padding: 20px; border-radius: 10px;">
+                                <h4 style="margin-bottom: 15px; color: var(--apple-blue);">使用建议</h4>
+                                <p>✅ <strong>使用ST-Link时：</strong>选择Serial Wire</p>
+                                <p>✅ <strong>使用J-Link时：</strong>可选JTAG或Trace Asynchronous</p>
+                                <p>⚠️ <strong>注意：</strong>在CubeMX中选择的调试协议必须与MDK中选择的协议一致</p>
+                                <p>🔍 <strong>调试问题：</strong>如果遇到烧录和调试失败，尝试切换协议</p>
+                                <button class="btn" style="width: 100%; margin-top: 20px;">推荐: Serial Wire</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 工程配置部分 -->
+        <div id="project" class="section-container">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <div class="section-title-container">
+                    <h2 class="section-title">工程配置</h2>
+                    <p class="section-subtitle">构建项目的基础框架</p>
+                </div>
+            </div>
+            
+            <div class="section-content">
+                <p>工程配置是创建一个结构良好、可维护的嵌入式项目的关键步骤。它定义了项目的整体结构、代码生成方式和中间件配置等重要参数。</p>
+                
+                <div class="interactive-demo" style="background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,245,247,0.95) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02); overflow: hidden; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
+                    <div class="tab-container" style="display: flex; border-bottom: none; margin-bottom: 0; background-color: rgba(255,255,255,0.7); padding: 15px 20px 0;">
+                        <div class="tab active" data-tab="project-tab" style="font-size: 15px; font-weight: 500; padding: 12px 20px; border-radius: 12px 12px 0 0; color: var(--apple-dark); position: relative; background-color: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.03);">项目设置</div>
+                        <div class="tab" data-tab="generator-tab" style="font-size: 15px; font-weight: 500; padding: 12px 20px; border-radius: 12px 12px 0 0; color: var(--apple-light-text);">代码生成器</div>
+                        <div class="tab" data-tab="advanced-tab" style="font-size: 15px; font-weight: 500; padding: 12px 20px; border-radius: 12px 12px 0 0; color: var(--apple-light-text);">高级选项</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="project-tab" style="background-color: white; padding: 30px; border-radius: 0 16px 16px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); display: block;">
+                        <h3 style="font-size: 22px; font-weight: 600; margin-bottom: 25px; color: var(--apple-dark);">项目基本设置</h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 20px;">
+                            <div class="setting-card" style="background-color: #FAFAFA; border-radius: 14px; padding: 24px; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
+                                <div style="position: absolute; top: 0; left: 0; width: 5px; height: 30px; background: linear-gradient(180deg, #42e695 0%, #3bb2b8 100%);"></div>
+                                <h4 style="margin-bottom: 16px; color: var(--apple-dark); font-size: 17px; font-weight: 600;">项目名称</h4>
+                                <div style="background-color: white; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,0.03); padding: 16px; margin-bottom: 14px;">
+                                    <input type="text" placeholder="MyProject" style="width: 100%; border: none; font-size: 15px; outline: none; color: var(--apple-dark);">
+                                </div>
+                                <p style="color: var(--apple-light-text); font-size: 14px; line-height: 1.5;">设置项目的名称，将用于生成的文件和文件夹。名称应避免使用特殊字符和空格。</p>
+                            </div>
+                            
+                            <div class="setting-card" style="background-color: #FAFAFA; border-radius: 14px; padding: 24px; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
+                                <div style="position: absolute; top: 0; left: 0; width: 5px; height: 30px; background: linear-gradient(180deg, #42e695 0%, #3bb2b8 100%);"></div>
+                                <h4 style="margin-bottom: 16px; color: var(--apple-dark); font-size: 17px; font-weight: 600;">项目位置</h4>
+                                <div style="background-color: white; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,0.03); padding: 16px; margin-bottom: 14px; display: flex; align-items: center;">
+                                    <input type="text" placeholder="C:/STM32Projects/" style="flex: 1; border: none; font-size: 15px; outline: none; color: var(--apple-dark);">
+                                    <button style="background-color: var(--apple-gray); border: none; padding: 6px 12px; border-radius: 6px; margin-left: 10px; font-size: 14px; cursor: pointer; transition: background-color 0.2s;">浏览...</button>
+                                </div>
+                                <p style="color: var(--apple-light-text); font-size: 14px; line-height: 1.5;">设置项目的存储位置。路径应避免使用特殊字符和空格，以确保兼容性。</p>
+                            </div>
+                            
+                            <div class="setting-card" style="background-color: #FAFAFA; border-radius: 14px; padding: 24px; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
+                                <div style="position: absolute; top: 0; left: 0; width: 5px; height: 30px; background: linear-gradient(180deg, #42e695 0%, #3bb2b8 100%);"></div>
+                                <h4 style="margin-bottom: 16px; color: var(--apple-dark); font-size: 17px; font-weight: 600;">开发环境</h4>
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px;">
+                                    <div class="ide-option" style="background-color: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 1px 5px rgba(0,0,0,0.03); cursor: pointer; transition: all 0.2s; border: 2px solid var(--apple-blue);">
+                                        <div style="font-weight: 500; font-size: 15px; color: var(--apple-blue);">MDK-ARM</div>
+                                    </div>
+                                    <div class="ide-option" style="background-color: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 1px 5px rgba(0,0,0,0.03); cursor: pointer; transition: all 0.2s;">
+                                        <div style="font-weight: 500; font-size: 15px; color: var(--apple-light-text);">IAR</div>
+                                    </div>
+                                    <div class="ide-option" style="background-color: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 1px 5px rgba(0,0,0,0.03); cursor: pointer; transition: all 0.2s;">
+                                        <div style="font-weight: 500; font-size: 15px; color: var(--apple-light-text);">CubeIDE</div>
+                                    </div>
+                                    <div class="ide-option" style="background-color: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 1px 5px rgba(0,0,0,0.03); cursor: pointer; transition: all 0.2s;">
+                                        <div style="font-weight: 500; font-size: 15px; color: var(--apple-light-text);">Makefile</div>
+                                    </div>
+                                </div>
+                                <p style="color: var(--apple-light-text); font-size: 14px; line-height: 1.5;">选择用于开发项目的集成开发环境或工具链。这将决定生成的项目文件格式。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="generator-tab" style="background-color: white; padding: 30px; border-radius: 0 16px 16px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); display: none;">
+                        <h3 style="font-size: 22px; font-weight: 600; margin-bottom: 25px; color: var(--apple-dark);">代码生成器设置</h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 20px;">
+                            <div class="setting-card" style="background-color: #FAFAFA; border-radius: 14px; padding: 24px; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                                <h4 style="margin-bottom: 16px; color: var(--apple-dark); font-size: 17px; font-weight: 600;">生成文件选项</h4>
+                                
+                                <div style="margin-bottom: 16px;">
+                                    <label class="custom-checkbox" style="display: flex; align-items: center; margin-bottom: 12px; cursor: pointer;">
+                                        <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--apple-blue); margin-right: 12px; position: relative; display: flex; align-items: center; justify-content: center;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="position: absolute;">
+                                                <path d="M5 12L10 17L19 8" stroke="var(--apple-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </div>
+                                        <div style="font-size: 15px; color: var(--apple-dark);">为每个外设生成'.c/.h'文件对</div>
+                                    </label>
+                                    
+                                    <label class="custom-checkbox" style="display: flex; align-items: center; cursor: pointer;">
+                                        <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--apple-blue); margin-right: 12px; position: relative; display: flex; align-items: center; justify-content: center;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="position: absolute;">
+                                                <path d="M5 12L10 17L19 8" stroke="var(--apple-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </div>
+                                        <div style="font-size: 15px; color: var(--apple-dark);">添加必要的库文件作为项目引用</div>
+                                    </label>
+                                </div>
+                                
+                                <div style="background-color: rgba(0,102,204,0.05); border-radius: 10px; padding: 14px; margin-top: 10px;">
+                                    <p style="color: var(--apple-light-text); font-size: 14px; line-height: 1.5; margin: 0;">选择第一个选项可以使每个外设有独立的源文件，便于代码组织和管理，但会增加项目文件数量。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-card" style="background-color: #FAFAFA; border-radius: 14px; padding: 24px; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                                <h4 style="margin-bottom: 16px; color: var(--apple-dark); font-size: 17px; font-weight: 600;">代码生成选项</h4>
+                                
+                                <div style="margin-bottom: 16px;">
+                                    <label class="custom-checkbox" style="display: flex; align-items: center; margin-bottom: 12px; cursor: pointer;">
+                                        <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--apple-blue); margin-right: 12px; position: relative; display: flex; align-items: center; justify-content: center;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="position: absolute;">
+                                                <path d="M5 12L10 17L19 8" stroke="var(--apple-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </div>
+                                        <div style="font-size: 15px; color: var(--apple-dark);">仅复制必要的库文件</div>
+                                    </label>
+                                    
+                                    <label class="custom-checkbox" style="display: flex; align-items: center; margin-bottom: 12px; cursor: pointer;">
+                                        <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--apple-blue); margin-right: 12px; position: relative; display: flex; align-items: center; justify-content: center;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="position: absolute;">
+                                                <path d="M5 12L10 17L19 8" stroke="var(--apple-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </div>
+                                        <div style="font-size: 15px; color: var(--apple-dark);">重新生成时保留用户代码</div>
+                                    </label>
+                                    
+                                    <label class="custom-checkbox" style="display: flex; align-items: center; cursor: pointer;">
+                                        <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--apple-blue); margin-right: 12px; position: relative; display: flex; align-items: center; justify-content: center;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="position: absolute;">
+                                                <path d="M5 12L10 17L19 8" stroke="var(--apple-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </div>
+                                        <div style="font-size: 15px; color: var(--apple-dark);">重新生成时备份先前生成的文件</div>
+                                    </label>
+                                </div>
+                                
+                                <div style="background-color: rgba(0,102,204,0.05); border-radius: 10px; padding: 14px; margin-top: 10px;">
+                                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                        <div style="min-width: 24px; height: 24px; border-radius: 50%; background-color: rgba(0,102,204,0.1); display: flex; align-items: center; justify-content: center; margin-top: 2px;">
+                                            <span style="color: var(--apple-blue); font-weight: 600; font-size: 14px;">!</span>
+                                        </div>
+                                        <p style="color: var(--apple-light-text); font-size: 14px; line-height: 1.5; margin: 0;">强烈建议勾选"重新生成时保留用户代码"选项，这样在更新配置时不会丢失您编写的代码。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="advanced-tab" style="background-color: white; padding: 30px; border-radius: 0 16px 16px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); display: none;">
+                        <h3 style="font-size: 22px; font-weight: 600; margin-bottom: 25px; color: var(--apple-dark);">高级设置</h3>
+                        
+                        <div class="advanced-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 20px;">
+                            <div class="setting-card" style="background-color: #FAFAFA; border-radius: 14px; padding: 24px; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
+                                <div style="position: absolute; top: 0; left: 0; width: 5px; height: 30px; background: linear-gradient(180deg, #FF9966 0%, #FF5E62 100%);"></div>
+                                <h4 style="margin-bottom: 16px; color: var(--apple-dark); font-size: 17px; font-weight: 600;">FreeRTOS 配置</h4>
+                                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                                    <div style="width: 46px; height: 24px; background-color: #E9E9EA; border-radius: 12px; position: relative; cursor: pointer; transition: background-color 0.3s;">
+                                        <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background-color: white; top: 1px; left: 1px; transition: left 0.3s, background-color 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>
+                                    </div>
+                                    <span style="margin-left: 10px; font-size: 15px; color: var(--apple-light-text);">启用 FreeRTOS</span>
+                                </div>
+                                <p style="color: var(--apple-light-text); font-size: 14px; line-height: 1.5;">FreeRTOS 是一个实时操作系统内核，用于嵌入式设备。启用后可配置任务管理、内存分配和通信机制。</p>
+                            </div>
+                            
+                            <div class="setting-card" style="background-color: #FAFAFA; border-radius: 14px; padding: 24px; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
+                                <div style="position: absolute; top: 0; left: 0; width: 5px; height: 30px; background: linear-gradient(180deg, #36D1DC 0%, #5B86E5 100%);"></div>
+                                <h4 style="margin-bottom: 16px; color: var(--apple-dark); font-size: 17px; font-weight: 600;">中间件配置</h4>
+                                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                                    <div class="chip" style="background-color: white; border-radius: 16px; padding: 8px 14px; display: flex; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
+                                        <span style="font-size: 14px; color: var(--apple-light-text);">USB</span>
+                                    </div>
+                                    <div class="chip" style="background-color: white; border-radius: 16px; padding: 8px 14px; display: flex; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
+                                        <span style="font-size: 14px; color: var(--apple-light-text);">TCP/IP</span>
+                                    </div>
+                                    <div class="chip" style="background-color: white; border-radius: 16px; padding: 8px 14px; display: flex; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
+                                        <span style="font-size: 14px; color: var(--apple-light-text);">FatFS</span>
+                                    </div>
+                                    <div class="chip" style="background-color: white; border-radius: 16px; padding: 8px 14px; display: flex; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
+                                        <span style="font-size: 14px; color: var(--apple-light-text);">STemWin</span>
+                                    </div>
+                                </div>
+                                <p style="color: var(--apple-light-text); font-size: 14px; line-height: 1.5;">选择项目中需要使用的中间件组件。每个选项都会添加相应的库文件和初始化代码到项目中。</p>
+                            </div>
+                            
+                            <div class="setting-card" style="background-color: #FAFAFA; border-radius: 14px; padding: 24px; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
+                                <div style="position: absolute; top: 0; left: 0; width: 5px; height: 30px; background: linear-gradient(180deg, #614385 0%, #516395 100%);"></div>
+                                <h4 style="margin-bottom: 16px; color: var(--apple-dark); font-size: 17px; font-weight: 600;">输出文件格式</h4>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+                                    <div class="format-option" style="background-color: white; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; border: 2px solid var(--apple-blue); transition: all 0.2s;">
+                                        <div style="font-weight: 500; font-size: 14px; color: var(--apple-blue);">.hex</div>
+                                    </div>
+                                    <div class="format-option" style="background-color: white; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s;">
+                                        <div style="font-weight: 500; font-size: 14px; color: var(--apple-light-text);">.bin</div>
+                                    </div>
+                                    <div class="format-option" style="background-color: white; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s;">
+                                        <div style="font-weight: 500; font-size: 14px; color: var(--apple-light-text);">.elf</div>
+                                    </div>
+                                </div>
+                                <p style="color: var(--apple-light-text); font-size: 14px; line-height: 1.5;">选择生成的可执行文件格式。HEX 格式适用于大多数烧录工具，BIN 格式是纯二进制文件，ELF 包含调试信息。</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px; display: flex; justify-content: flex-end;">
+                            <button class="btn" style="background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%); border: none; color: white; padding: 12px 24px; border-radius: 30px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(59, 178, 184, 0.3);">
+                                <span style="margin-right: 8px;">应用设置</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 40px; background: linear-gradient(135deg, rgba(0,102,204,0.03) 0%, rgba(0,102,204,0.06) 100%); border-radius: 16px; padding: 25px; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; right: 0; width: 120px; height: 120px; background: radial-gradient(circle, rgba(66, 230, 149, 0.1) 0%, rgba(59, 178, 184, 0) 70%); border-radius: 50%;"></div>
+                    
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: var(--apple-dark);">工程配置最佳实践</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                        <div style="display: flex; align-items: flex-start; gap: 14px;">
+                            <div style="width: 32px; height: 32px; min-width: 32px; border-radius: 50%; background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; margin-top: 2px;">1</div>
+                            <div>
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--apple-dark);">使用有意义的项目名称</h4>
+                                <p style="font-size: 14px; color: var(--apple-light-text); line-height: 1.5;">为项目选择描述性名称，便于识别和管理，尤其在处理多个项目时。</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: flex-start; gap: 14px;">
+                            <div style="width: 32px; height: 32px; min-width: 32px; border-radius: 50%; background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; margin-top: 2px;">2</div>
+                            <div>
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--apple-dark);">独立文件管理外设</h4>
+                                <p style="font-size: 14px; color: var(--apple-light-text); line-height: 1.5;">选择为每个外设生成单独的文件，使项目结构更清晰，便于维护和调试。</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: flex-start; gap: 14px;">
+                            <div style="width: 32px; height: 32px; min-width: 32px; border-radius: 50%; background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; margin-top: 2px;">3</div>
+                            <div>
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--apple-dark);">保留用户代码</h4>
+                                <p style="font-size: 14px; color: var(--apple-light-text); line-height: 1.5;">总是启用"重新生成时保留用户代码"选项，这样在配置更改后不会丢失您的工作。</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: flex-start; gap: 14px;">
+                            <div style="width: 32px; height: 32px; min-width: 32px; border-radius: 50%; background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; margin-top: 2px;">4</div>
+                            <div>
+                                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--apple-dark);">备份重要文件</h4>
+                                <p style="font-size: 14px; color: var(--apple-light-text); line-height: 1.5;">在开发关键项目时，定期手动备份，不仅依赖CubeMX的自动备份功能。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- NVIC配置部分 -->
+        <div id="nvic" class="section-container">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <div class="section-title-container">
+                    <h2 class="section-title">NVIC配置</h2>
+                    <p class="section-subtitle">中断控制与优先级管理</p>
+                </div>
+            </div>
+            
+            <div class="section-content">
+                <div class="interactive-demo">
+                    <h3>为什么选择SysTick作为时间基准源</h3>
+                    <div style="background: linear-gradient(135deg, rgba(0,102,204,0.05) 0%, rgba(0,102,204,0.1) 100%); padding: 25px; border-radius: 15px; margin-top: 20px;">
+                        <p>在STM32微控制器项目中，许多与计时相关的功能通常依赖于软件定时器，即默认的SysTick定时器。如果SysTick定时器的优先级设置过低，它将频繁地被其他任务抢占，导致计时精度下降和系统响应延迟。</p>
+                        
+                        <h4 style="margin: 20px 0 15px; color: var(--apple-blue);">原因分析</h4>
+                        <div class="card-container" style="margin-top: 0;">
+                            <div class="card">
+                                <div class="card-icon">⏰</div>
+                                <h4 class="card-title">软件定时器依赖</h4>
+                                <p class="card-content">许多计时功能（如`HAL_Delay()`函数和各种超时机制）依赖于SysTick定时器提供的时间基准。</p>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-icon">⚡</div>
+                                <h4 class="card-title">优先级的重要性</h4>
+                                <p class="card-content">SysTick定时器的中断优先级决定了它在系统中断和任务调度中的地位。如果优先级过低，其他高优先级的中断和任务将频繁抢占SysTick定时器，影响其计时准确性。</p>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-icon">🔄</div>
+                                <h4 class="card-title">系统稳定性</h4>
+                                <p class="card-content">为了确保系统的计时功能稳定运行，必须合理设置SysTick定时器的优先级，以避免频繁的中断抢占。</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 25px; background-color: rgba(0,102,204,0.1); padding: 15px; border-radius: 10px; border-left: 4px solid var(--apple-blue);">
+                            <h4 style="margin-bottom: 10px; color: var(--apple-blue);">推荐配置</h4>
+                            <p>在一般应用中，建议将SysTick的优先级设置为较高级别（0-2），以确保系统时基的准确性。如果项目中有更关键的实时响应需求，可根据具体情况调整，但应保证SysTick不会频繁被抢占。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 40px;">
+                    <h3>NVIC配置要点</h3>
+                    <div class="steps-container">
+                        <div class="step-line"></div>
+                        
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4 class="step-title">中断分组设置</h4>
+                                <p class="step-description">根据应用需求，选择合适的中断分组方式，以平衡抢占优先级和子优先级的分配。常用配置为"4 bits for pre-emption priority, 0 bits for subpriority"。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4 class="step-title">优先级分配原则</h4>
+                                <p class="step-description">为不同的中断源分配合适的优先级，通常遵循"响应时间越严格，优先级越高"的原则。例如，安全相关的中断应具有高优先级，而后台处理任务可以分配较低的优先级。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4 class="step-title">中断嵌套考虑</h4>
+                                <p class="step-description">在设计中断处理系统时，需要考虑中断嵌套的可能性。过度使用中断嵌套可能导致栈溢出和系统不稳定，应当谨慎设计。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4 class="step-title">中断处理函数优化</h4>
+                                <p class="step-description">中断处理函数应尽量简短，只执行必要的操作。可以使用标志位方式，在主循环中处理耗时操作，减少中断处理的时间。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Keil配置部分 -->
+        <div id="keil" class="section-container">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <div class="section-title-container">
+                    <h2 class="section-title">Keil配置</h2>
+                    <p class="section-subtitle">工程文件结构与管理</p>
+                </div>
+            </div>
+            
+            <div class="section-content">
+                <p>Keil MDK是STM32开发中常用的集成开发环境，了解其工程文件结构对项目开发和维护至关重要。本节将介绍STM32CubeMX生成的Keil工程主要文件和目录的作用。</p>
+                
+                <div class="card-container">
+                    <div class="card">
+                        <div class="card-icon">📄</div>
+                        <h4 class="card-title">.mxproject</h4>
+                        <p class="card-content">包含项目的元数据和配置。它通常是由STM32CubeMX等工具生成的，用于描述工程的整体设置和生成代码的选项。</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-icon">📁</div>
+                        <h4 class="card-title">Core</h4>
+                        <p class="card-content">包含核心代码，如主程序、系统初始化和中断服务例程等。包括主程序入口、系统初始化和中断处理代码。</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-icon">⚙️</div>
+                        <h4 class="card-title">Drivers</h4>
+                        <p class="card-content">包含设备驱动程序，通常包括外设的初始化和控制代码，以及HAL/LL库的硬件抽象层。</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-icon">🛠️</div>
+                        <h4 class="card-title">MDK-ARM</h4>
+                        <p class="card-content">用于存放ARM MDK (Keil) 集成开发环境相关的文件，包含工程文件如.uvprojx和.uvoptx，以及编译设置。</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-icon">📲</div>
+                        <h4 class="card-title">MyAPP</h4>
+                        <p class="card-content">用户自定义的应用程序代码目录，用于存放用户编写的应用逻辑代码和功能模块实现。</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-icon">🔌</div>
+                        <h4 class="card-title">Xifeng_V1.ioc</h4>
+                        <p class="card-content">I/O配置文件，用于描述微控制器的引脚和外设配置，定义外设的初始化参数和工作模式。</p>
+                    </div>
+                </div>
+                
+                <div class="interactive-demo" style="margin-top: 40px;">
+                    <h3>工程目录结构图解</h3>
+                    <div style="margin-top: 20px; padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);">
+                        <div style="display: flex; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 15px; display: flex; align-items: center;">
+                                    <span style="display: inline-block; width: 20px; height: 20px; background-color: var(--apple-blue); border-radius: 4px; margin-right: 10px;"></span>
+                                    项目根目录
+                                </div>
+                                <div style="padding-left: 30px;">
+                                    <div style="margin-bottom: 10px; display: flex; align-items: center;">
+                                        <span style="display: inline-block; width: 12px; height: 12px; border: 2px solid var(--apple-blue); border-radius: 50%; margin-right: 10px;"></span>
+                                        .mxproject
+                                    </div>
+                                    <div style="margin-bottom: 10px; display: flex; align-items: center;">
+                                        <span style="display: inline-block; width: 12px; height: 12px; border: 2px solid var(--apple-blue); border-radius: 50%; margin-right: 10px;"></span>
+                                        Xifeng_V1.ioc
+                                    </div>
+                                    <div style="margin-bottom: 10px; display: flex; align-items: center;">
+                                        <span style="display: inline-block; width: 16px; height: 16px; background-color: var(--apple-gray); border-radius: 3px; margin-right: 10px;"></span>
+                                        Core/
+                                    </div>
+                                    <div style="padding-left: 30px; margin-bottom: 10px;">
+                                        <div style="margin-bottom: 5px; display: flex; align-items: center;">
+                                            <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--apple-light-text); border-radius: 50%; margin-right: 10px;"></span>
+                                            Inc/ (头文件目录)
+                                        </div>
+                                        <div style="display: flex; align-items: center;">
+                                            <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--apple-light-text); border-radius: 50%; margin-right: 10px;"></span>
+                                            Src/ (源文件目录)
+                                        </div>
+                                    </div>
+                                    <div style="margin-bottom: 10px; display: flex; align-items: center;">
+                                        <span style="display: inline-block; width: 16px; height: 16px; background-color: var(--apple-gray); border-radius: 3px; margin-right: 10px;"></span>
+                                        Drivers/
+                                    </div>
+                                    <div style="padding-left: 30px; margin-bottom: 10px;">
+                                        <div style="margin-bottom: 5px; display: flex; align-items: center;">
+                                            <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--apple-light-text); border-radius: 50%; margin-right: 10px;"></span>
+                                            CMSIS/
+                                        </div>
+                                        <div style="display: flex; align-items: center;">
+                                            <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--apple-light-text); border-radius: 50%; margin-right: 10px;"></span>
+                                            STM32F1xx_HAL_Driver/
+                                        </div>
+                                    </div>
+                                    <div style="margin-bottom: 10px; display: flex; align-items: center;">
+                                        <span style="display: inline-block; width: 16px; height: 16px; background-color: var(--apple-gray); border-radius: 3px; margin-right: 10px;"></span>
+                                        MDK-ARM/
+                                    </div>
+                                    <div style="padding-left: 30px; margin-bottom: 10px;">
+                                        <div style="margin-bottom: 5px; display: flex; align-items: center;">
+                                            <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--apple-light-text); border-radius: 50%; margin-right: 10px;"></span>
+                                            Xifeng_V1.uvprojx
+                                        </div>
+                                        <div style="display: flex; align-items: center;">
+                                            <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--apple-light-text); border-radius: 50%; margin-right: 10px;"></span>
+                                            Xifeng_V1.uvoptx
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center;">
+                                        <span style="display: inline-block; width: 16px; height: 16px; background-color: var(--apple-gray); border-radius: 3px; margin-right: 10px;"></span>
+                                        MyAPP/ (用户应用代码)
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="flex: 1;">
+                                <h4 style="margin-bottom: 15px; color: var(--apple-blue);">目录说明</h4>
+                                <div style="margin-bottom: 15px; background-color: var(--apple-gray); padding: 15px; border-radius: 8px;">
+                                    <div style="font-weight: 500; margin-bottom: 5px;">Core</div>
+                                    <p>包含项目的核心功能代码，如main.c、stm32f1xx_it.c（中断处理）以及系统初始化代码。</p>
+                                </div>
+                                <div style="margin-bottom: 15px; background-color: var(--apple-gray); padding: 15px; border-radius: 8px;">
+                                    <div style="font-weight: 500; margin-bottom: 5px;">Drivers</div>
+                                    <p>包含HAL库和CMSIS库，提供对微控制器外设的访问和控制功能。</p>
+                                </div>
+                                <div style="margin-bottom: 15px; background-color: var(--apple-gray); padding: 15px; border-radius: 8px;">
+                                    <div style="font-weight: 500; margin-bottom: 5px;">MDK-ARM</div>
+                                    <p>Keil MDK项目文件，包含编译和调试设置。</p>
+                                </div>
+                                <div style="background-color: var(--apple-gray); padding: 15px; border-radius: 8px;">
+                                    <div style="font-weight: 500; margin-bottom: 5px;">MyAPP</div>
+                                    <p>用户自定义的应用程序代码目录，用于组织和管理用户自己编写的代码。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 页面滚动时显示各个章节
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.section-container');
+            const options = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+            
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        
+                        // 激活步骤线条
+                        const stepLine = entry.target.querySelector('.step-line');
+                        if (stepLine) {
+                            stepLine.classList.add('visible');
+                        }
+                        
+                        // 逐步显示步骤
+                        const steps = entry.target.querySelectorAll('.step');
+                        steps.forEach((step, index) => {
+                            setTimeout(() => {
+                                step.classList.add('visible');
+                            }, 300 * index);
+                        });
+                    }
+                });
+            }, options);
+            
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // 标签页切换
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabContainer = this.parentElement;
+                    const contentId = this.getAttribute('data-tab');
+                    
+                    // 切换标签激活状态
+                    tabContainer.querySelectorAll('.tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // 切换内容显示
+                    const tabContents = tabContainer.parentElement.querySelectorAll('.tab-content');
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        content.style.display = 'none'; // 确保所有标签内容都隐藏
+                    });
+                    const activeContent = tabContainer.parentElement.querySelector(`#${contentId}`);
+                    if(activeContent) {
+                        activeContent.classList.add('active');
+                        activeContent.style.display = 'block'; // 显示当前活动的标签内容
+                    }
+                });
+            });
+            
+            // 初始化标签页状态
+            document.querySelectorAll('.interactive-demo').forEach(demo => {
+                const tabs = demo.querySelectorAll('.tab');
+                const tabContents = demo.querySelectorAll('.tab-content');
+                
+                // 默认显示第一个标签内容
+                if(tabs.length > 0 && tabContents.length > 0) {
+                    const firstTab = tabs[0];
+                    const firstContentId = firstTab.getAttribute('data-tab');
+                    const firstContent = demo.querySelector(`#${firstContentId}`);
+                    
+                    if(firstContent) {
+                        tabContents.forEach(content => {
+                            content.classList.remove('active');
+                            content.style.display = 'none';
+                        });
+                        
+                        firstContent.classList.add('active');
+                        firstContent.style.display = 'block';
+                    }
+                }
+            });
+            
+            // 可折叠内容切换
+            const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
+            collapsibleHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const container = this.parentElement;
+                    container.classList.toggle('open');
+                });
+            });
+            
+            // 时钟动画
+            function updateClock() {
+                const now = new Date();
+                const hours = now.getHours() % 12;
+                const minutes = now.getMinutes();
+                const seconds = now.getSeconds();
+                
+                const hourHand = document.querySelector('.hour-hand');
+                const minuteHand = document.querySelector('.minute-hand');
+                const secondHand = document.querySelector('.second-hand');
+                
+                const hourDeg = (hours * 30) + (minutes * 0.5);
+                const minuteDeg = minutes * 6;
+                const secondDeg = seconds * 6;
+                
+                hourHand.style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
+                minuteHand.style.transform = `translateX(-50%) rotate(${minuteDeg}deg)`;
+                secondHand.style.transform = `translateX(-50%) rotate(${secondDeg}deg)`;
+            }
+            
+            // 初始化时钟
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
+    </script>
+</body>
+</html>

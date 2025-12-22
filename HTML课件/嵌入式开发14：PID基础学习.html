@@ -1,0 +1,2082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PID控制算法学习 - 米醋电子工作室</title>
+    <style>
+        :root {
+            --apple-blue: #0071e3;
+            --apple-light-gray: #f5f5f7;
+            --apple-dark-gray: #333333;
+            --apple-medium-gray: #86868b;
+            --apple-black: #1d1d1f;
+            --apple-white: #ffffff;
+            --section-spacing: 80px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--apple-white);
+            color: var(--apple-black);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: var(--apple-light-gray);
+            padding: 40px 0;
+            text-align: center;
+            margin-bottom: var(--section-spacing);
+        }
+        
+        h1 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        h2 {
+            font-size: 32px;
+            font-weight: 600;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--apple-light-gray);
+        }
+        
+        h3 {
+            font-size: 24px;
+            font-weight: 500;
+            margin: 30px 0 15px;
+        }
+        
+        p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--apple-dark-gray);
+        }
+        
+        .subtitle {
+            font-size: 24px;
+            color: var(--apple-medium-gray);
+            margin-bottom: 40px;
+        }
+        
+        .section {
+            margin-bottom: var(--section-spacing);
+            position: relative;
+            padding: 30px;
+            border-radius: 20px;
+            background-color: var(--apple-white);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .highlight {
+            background-color: var(--apple-light-gray);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .highlight p {
+            margin-bottom: 10px;
+        }
+        
+        .highlight p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .button {
+            display: inline-block;
+            background-color: var(--apple-blue);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            margin: 20px 10px 20px 0;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .button:hover {
+            background-color: #0062cc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 113, 227, 0.3);
+        }
+        
+        .button:active {
+            transform: translateY(1px);
+        }
+        
+        .button.secondary {
+            background-color: var(--apple-light-gray);
+            color: var(--apple-black);
+        }
+        
+        .button.secondary:hover {
+            background-color: #e8e8e8;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        footer {
+            background-color: var(--apple-light-gray);
+            padding: 40px 0;
+            text-align: center;
+            margin-top: var(--section-spacing);
+        }
+        
+        .copyright {
+            font-size: 14px;
+            color: var(--apple-medium-gray);
+        }
+        
+        .two-column {
+            display: flex;
+            margin: 30px 0;
+            gap: 30px;
+        }
+        
+        .column {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .two-column {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .image-caption {
+            text-align: center;
+            font-size: 14px;
+            color: var(--apple-medium-gray);
+            margin-top: -15px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-container {
+            margin: 30px 0;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--apple-light-gray);
+            margin-bottom: 20px;
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            border-bottom: 2px solid var(--apple-blue);
+            color: var(--apple-blue);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .slider-container {
+            margin: 30px 0;
+        }
+        
+        .slider-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .slider-label {
+            width: 100px;
+            font-weight: 500;
+        }
+        
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            background: var(--apple-light-gray);
+            border-radius: 4px;
+            outline: none;
+            padding: 0;
+            margin: 0 15px;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--apple-blue);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 113, 227, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 10px rgba(0, 113, 227, 0.5);
+        }
+        
+        .slider-value {
+            width: 60px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 30px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        canvas {
+            border-radius: 12px;
+        }
+        
+        .tips-card {
+            background-color: var(--apple-light-gray);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid var(--apple-blue);
+        }
+        
+        .tips-card h4 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--apple-blue);
+        }
+        
+        .animation-container {
+            position: relative;
+            height: 300px;
+            margin: 30px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: var(--apple-light-gray);
+        }
+        
+        .control-point {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: var(--apple-blue);
+            border-radius: 50%;
+            top: 150px;
+            left: 100px;
+            transform: translate(-50%, -50%);
+            transition: left 0.1s linear;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .target-point {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #FF9500;
+            border-radius: 50%;
+            top: 150px;
+            left: 600px;
+            transform: translate(-50%, -50%);
+            opacity: 0.8;
+            z-index: 5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .path-line {
+            position: absolute;
+            height: 2px;
+            background-color: var(--apple-medium-gray);
+            top: 150px;
+            left: 100px;
+            right: 100px;
+            opacity: 0.3;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .card {
+            background-color: var(--apple-white);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h4 {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .parameter-effect-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .parameter-effect-table th, .parameter-effect-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--apple-light-gray);
+        }
+        
+        .parameter-effect-table th {
+            font-weight: 500;
+            color: var(--apple-medium-gray);
+            background-color: var(--apple-light-gray);
+        }
+        
+        .parameter-effect-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .parameter-effect-table td:first-child {
+            font-weight: 500;
+        }
+        
+        /* 按钮和指示器样式 */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        
+        .indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .indicator.green {
+            background-color: #34C759;
+        }
+        
+        .indicator.yellow {
+            background-color: #FF9500;
+        }
+        
+        .indicator.red {
+            background-color: #FF3B30;
+        }
+
+        /* 新增：添加响应曲线的图例样式 */
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PID控制算法学习</h1>
+            <p class="subtitle">一站式学习PID控制原理、调参技巧与应用 - 专为嵌入式小白设计</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- 第一部分：PID概述 -->
+        <section class="section" id="introduction">
+            <h2>PID控制算法：基础概念</h2>
+            
+            <p>PID（比例-积分-微分）控制是最常用的反馈控制算法之一，广泛应用于温度控制、无人机稳定性、电机控制等众多嵌入式系统中。</p>
+            
+            <div class="highlight">
+                <p><strong>PID控制的核心思想：</strong>根据当前状态与目标状态之间的偏差（误差），计算控制量，使系统逐渐达到目标状态。</p>
+            </div>
+            
+            <div class="two-column">
+                <div class="column">
+                    <h3>基本原理图解</h3>
+                    <p>PID控制器接收误差信号（目标值与实际值的差），通过比例、积分和微分三个环节的处理，输出控制信号来调整系统，使实际输出逐渐接近目标值。</p>
+                    
+                    <div class="tips-card">
+                        <h4>小白提示</h4>
+                        <p>可以把PID控制想象成驾驶汽车：</p>
+                        <p>• <strong>比例项(P)</strong>：看到目标偏离多少，就转动方向盘多少</p>
+                        <p>• <strong>积分项(I)</strong>：长期偏离中心，逐渐加大方向盘转角</p>
+                        <p>• <strong>微分项(D)</strong>：预判汽车转向速度，提前减小方向盘转角防止过冲</p>
+                    </div>
+                </div>
+                
+                <div class="column">
+                    <div class="animation-container">
+                        <div class="path-line"></div>
+                        <div class="control-point" id="control-point"></div>
+                        <div class="target-point" id="target-point"></div>
+                    </div>
+                    <div class="image-caption">PID控制演示：通过调整参数，观察控制点（蓝色）如何接近目标点（橙色）</div>
+                    
+                    <div class="action-buttons">
+                        <button class="button" id="reset-animation">重置动画</button>
+                        <button class="button" id="start-p-only">仅P控制</button>
+                        <button class="button" id="start-pi">PI控制</button>
+                        <button class="button" id="start-pid">完整PID</button>
+                    </div>
+                    
+                    <div class="tips-card">
+                        <h4>动画说明</h4>
+                        <p>• <strong>仅P控制</strong>：直接响应，速度快，但可能达不到目标（静态误差）</p>
+                        <p>• <strong>PI控制</strong>：更精确地到达目标，但可能有轻微震荡</p>
+                        <p>• <strong>完整PID</strong>：最平稳地接近目标，减少过冲和震荡</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>PID控制方程</h3>
+            <p>PID控制器的输出可以用以下数学表达式表示：</p>
+            
+            <div class="highlight">
+                <p><strong>u(t) = Kp × e(t) + Ki × ∫e(t)dt + Kd × de(t)/dt</strong></p>
+                <p>其中：</p>
+                <p>• u(t) 是控制器输出</p>
+                <p>• e(t) 是误差信号（目标值 - 当前值）</p>
+                <p>• Kp 是比例系数</p>
+                <p>• Ki 是积分系数</p>
+                <p>• Kd 是微分系数</p>
+            </div>
+        </section>
+        
+        <!-- 第二部分：PID各个部分详解 -->
+        <section class="section" id="pid-components">
+            <h2>PID三大组成部分详解</h2>
+            
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="p-tab">比例项 (P)</button>
+                    <button class="tab-button" data-tab="i-tab">积分项 (I)</button>
+                    <button class="tab-button" data-tab="d-tab">微分项 (D)</button>
+                </div>
+                
+                <!-- 比例项内容 -->
+                <div class="tab-content active" id="p-tab">
+                    <div class="two-column">
+                        <div class="column">
+                            <h3>比例项 (P) - 直接响应误差</h3>
+                            <p>比例项的输出与当前误差成正比，是PID控制器最基本的组成部分。</p>
+                            
+                            <div class="highlight">
+                                <p><strong>比例项输出：</strong> P_out = Kp × e(t)</p>
+                            </div>
+                            
+                            <p><strong>作用：</strong> 立即对误差做出响应，误差越大，控制作用越强。</p>
+                            
+                            <p><strong>优点：</strong> 响应迅速，实现简单。</p>
+                            
+                            <p><strong>缺点：</strong> 单独使用时会产生稳态误差（无法完全消除误差）。</p>
+                            
+                            <div class="tips-card">
+                                <h4>调节Kp的效果</h4>
+                                <p>• <strong>增大Kp</strong>：系统响应速度加快，但过大会导致过冲或震荡</p>
+                                <p>• <strong>减小Kp</strong>：系统反应变慢，但更加稳定</p>
+                            </div>
+                        </div>
+                        
+                        <div class="column">
+                            <div class="chart-container">
+                                <canvas id="p-chart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #007AFF;"></div>
+                                    <span>Kp = 0.5</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF9500;"></div>
+                                    <span>Kp = 1.0</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF3B30;"></div>
+                                    <span>Kp = 2.0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <h4>调整比例系数Kp</h4>
+                                <div class="slider-row">
+                                    <span class="slider-label">Kp值：</span>
+                                    <input type="range" min="0.1" max="3" step="0.1" value="1" class="slider" id="kp-slider">
+                                    <span class="slider-value" id="kp-value">1.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 积分项内容 -->
+                <div class="tab-content" id="i-tab">
+                    <div class="two-column">
+                        <div class="column">
+                            <h3>积分项 (I) - 累积误差响应</h3>
+                            <p>积分项的输出与误差的积累（累积误差）成正比，用于消除系统的稳态误差。</p>
+                            
+                            <div class="highlight">
+                                <p><strong>积分项输出：</strong> I_out = Ki × ∫e(t)dt</p>
+                            </div>
+                            
+                            <p><strong>作用：</strong> 消除稳态误差，确保系统最终能达到设定值。</p>
+                            
+                            <p><strong>优点：</strong> 能够完全消除静态误差。</p>
+                            
+                            <p><strong>缺点：</strong> 可能引入超调和震荡，响应较慢。</p>
+                            
+                            <div class="tips-card">
+                                <h4>调节Ki的效果</h4>
+                                <p>• <strong>增大Ki</strong>：加快消除稳态误差，但可能增加超调和振荡</p>
+                                <p>• <strong>减小Ki</strong>：减少超调，但系统达到稳定状态的时间变长</p>
+                            </div>
+                        </div>
+                        
+                        <div class="column">
+                            <div class="chart-container">
+                                <canvas id="i-chart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #007AFF;"></div>
+                                    <span>Ki = 0.05</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF9500;"></div>
+                                    <span>Ki = 0.2</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF3B30;"></div>
+                                    <span>Ki = 0.5</span>
+                                </div>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <h4>调整积分系数Ki</h4>
+                                <div class="slider-row">
+                                    <span class="slider-label">Ki值：</span>
+                                    <input type="range" min="0" max="1" step="0.01" value="0.2" class="slider" id="ki-slider">
+                                    <span class="slider-value" id="ki-value">0.2</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 微分项内容 -->
+                <div class="tab-content" id="d-tab">
+                    <div class="two-column">
+                        <div class="column">
+                            <h3>微分项 (D) - 误差变化率响应</h3>
+                            <p>微分项的输出与误差的变化率成正比，用于预测系统行为并抑制超调。</p>
+                            
+                            <div class="highlight">
+                                <p><strong>微分项输出：</strong> D_out = Kd × de(t)/dt</p>
+                            </div>
+                            
+                            <p><strong>作用：</strong> 抑制系统响应的过冲，增加系统稳定性。</p>
+                            
+                            <p><strong>优点：</strong> 能预测系统趋势，减少震荡和超调。</p>
+                            
+                            <p><strong>缺点：</strong> 对噪声敏感，不适合在噪声大的系统中使用。</p>
+                            
+                            <div class="tips-card">
+                                <h4>调节Kd的效果</h4>
+                                <p>• <strong>增大Kd</strong>：增加阻尼，减少超调和振荡，但可能减慢响应速度</p>
+                                <p>• <strong>减小Kd</strong>：减少阻尼，加快响应，但可能增加超调</p>
+                            </div>
+                        </div>
+                        
+                        <div class="column">
+                            <div class="chart-container">
+                                <canvas id="d-chart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #007AFF;"></div>
+                                    <span>Kd = 0</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF9500;"></div>
+                                    <span>Kd = 0.5</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF3B30;"></div>
+                                    <span>Kd = 1.0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <h4>调整微分系数Kd</h4>
+                                <div class="slider-row">
+                                    <span class="slider-label">Kd值：</span>
+                                    <input type="range" min="0" max="2" step="0.1" value="0.5" class="slider" id="kd-slider">
+                                    <span class="slider-value" id="kd-value">0.5</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 第三部分：PID调参技巧 -->
+        <section class="section" id="pid-tuning">
+            <h2>PID参数调节技巧</h2>
+            
+            <p>调节PID参数是使用PID控制器的关键挑战。良好的参数设置可以让系统快速响应并保持稳定，而不合适的参数则可能导致系统震荡甚至失控。</p>
+            
+            <h3>参数影响总结表</h3>
+            
+            <table class="parameter-effect-table">
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>上升时间</th>
+                        <th>超调量</th>
+                        <th>稳定时间</th>
+                        <th>稳态误差</th>
+                        <th>稳定性</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>增大 Kp</td>
+                        <td>减少</td>
+                        <td>增加</td>
+                        <td>轻微变化</td>
+                        <td>减少</td>
+                        <td>降低</td>
+                    </tr>
+                    <tr>
+                        <td>增大 Ki</td>
+                        <td>轻微减少</td>
+                        <td>增加</td>
+                        <td>增加</td>
+                        <td>显著减少</td>
+                        <td>降低</td>
+                    </tr>
+                    <tr>
+                        <td>增大 Kd</td>
+                        <td>轻微变化</td>
+                        <td>减少</td>
+                        <td>减少</td>
+                        <td>轻微变化</td>
+                        <td>提高</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>常用PID调参方法</h3>
+            
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="method-zn">Ziegler-Nichols方法</button>
+                    <button class="tab-button" data-tab="method-trial">试错法</button>
+                    <button class="tab-button" data-tab="method-auto">自整定方法</button>
+                </div>
+                
+                <!-- Ziegler-Nichols方法 -->
+                <div class="tab-content active" id="method-zn">
+                    <h3>Ziegler-Nichols方法（临界振荡法）</h3>
+                    
+                    <p>这是一种经典的PID调参方法，适用于许多系统。步骤如下：</p>
+                    
+                    <div class="highlight">
+                        <p><strong>步骤1：</strong> 将Ki和Kd设为0，从小到大调整Kp，直到系统出现持续等幅震荡。记录此时的Kp值为Ku（临界增益）和震荡周期Tu。</p>
+                        <p><strong>步骤2：</strong> 根据下表计算PID参数：</p>
+                    </div>
+                    
+                    <table class="parameter-effect-table">
+                        <thead>
+                            <tr>
+                                <th>控制类型</th>
+                                <th>Kp</th>
+                                <th>Ki</th>
+                                <th>Kd</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>P控制</td>
+                                <td>0.5 × Ku</td>
+                                <td>0</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>PI控制</td>
+                                <td>0.45 × Ku</td>
+                                <td>0.54 × Ku / Tu</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>PID控制</td>
+                                <td>0.6 × Ku</td>
+                                <td>1.2 × Ku / Tu</td>
+                                <td>0.075 × Ku × Tu</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="tips-card">
+                        <h4>优点与适用场景</h4>
+                        <p>• <strong>优点：</strong> 方法简单直观，无需了解系统数学模型</p>
+                        <p>• <strong>适用：</strong> 适合大多数线性系统</p>
+                        <p>• <strong>不足：</strong> 调试过程中系统会发生震荡，不适用于不允许震荡的场合</p>
+                    </div>
+                </div>
+                
+                <!-- 试错法 -->
+                <div class="tab-content" id="method-trial">
+                    <h3>试错法（渐进式调参）</h3>
+                    
+                    <p>这是最常用的实际调参方法，适合初学者使用：</p>
+                    
+                    <div class="highlight">
+                        <p><strong>步骤1：</strong> 将所有参数设为0</p>
+                        <p><strong>步骤2：</strong> 先调节Kp，使系统有较快响应，但允许存在稳态误差</p>
+                        <p><strong>步骤3：</strong> 增加Ki消除稳态误差，但注意不要引入过多振荡</p>
+                        <p><strong>步骤4：</strong> 最后加入Kd减少超调和振荡</p>
+                    </div>
+                    
+                    <div class="two-column">
+                        <div class="column">
+                            <div class="tips-card">
+                                <h4>实用调参流程</h4>
+                                <p>1. <strong>单P控制</strong>：从小值开始增加Kp（如0.1, 0.2...），直到系统响应合理但略有震荡</p>
+                                <p>2. <strong>加入I项</strong>：保持Kp不变，从小值开始增加Ki（如0.01, 0.02...），直到稳态误差消除</p>
+                                <p>3. <strong>加入D项</strong>：保持Kp和Ki不变，从小值开始增加Kd，直到减少或消除震荡</p>
+                                <p>4. <strong>微调</strong>：根据实际表现，对三个参数进行微调以达到最佳性能</p>
+                            </div>
+                        </div>
+                        
+                        <div class="column">
+                            <div class="tips-card">
+                                <h4>常见问题与解决方法</h4>
+                                <p>• <strong>系统响应太慢：</strong> 增加Kp</p>
+                                <p>• <strong>系统振荡：</strong> 减小Kp或增加Kd</p>
+                                <p>• <strong>存在稳态误差：</strong> 增加Ki</p>
+                                <p>• <strong>超调严重：</strong> 增加Kd或减小Kp</p>
+                                <p>• <strong>长时间震荡不收敛：</strong> 减小Ki</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 自整定方法 -->
+                <div class="tab-content" id="method-auto">
+                    <h3>自整定方法</h3>
+                    
+                    <p>自整定是一种自动寻找最佳PID参数的方法，对于复杂系统特别有用：</p>
+                    
+                    <div class="highlight">
+                        <p><strong>常见自整定方法：</strong></p>
+                        <p>• <strong>继电反馈法</strong>：系统输入使用继电器（开关）控制，通过分析输出震荡特性确定参数</p>
+                        <p>• <strong>模型辨识法</strong>：通过输入和输出数据识别系统模型，然后计算最佳PID参数</p>
+                        <p>• <strong>遗传算法</strong>：使用进化算法自动搜索最优参数组合</p>
+                    </div>
+                    
+                    <div class="tips-card">
+                        <h4>在嵌入式系统中实现自整定</h4>
+                        <p>对于资源有限的嵌入式系统，可以采用简化的自整定方法：</p>
+                        <p>1. <strong>阶跃响应法</strong>：给系统一个阶跃输入，记录上升时间、超调量和稳定时间</p>
+                        <p>2. <strong>根据经验公式计算初始PID参数</strong>，如：</p>
+                        <p>   - Kp = 1.2 / (K × T)</p>
+                        <p>   - Ki = Kp / (2 × T)</p>
+                        <p>   - Kd = Kp × T / 8</p>
+                        <p>   其中K是系统增益，T是系统时间常数</p>
+                        <p>3. <strong>在线微调</strong>：运行时根据性能指标自动微调参数</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>PID参数初始值选择</h3>
+            
+            <p>选择合适的初始参数值可以大大加快调参过程。以下是针对不同类型系统的建议初始值：</p>
+            
+            <div class="card-grid">
+                <div class="card">
+                    <h4>温度控制系统</h4>
+                    <p>• <strong>Kp</strong>: 1.0 - 10.0</p>
+                    <p>• <strong>Ki</strong>: 0.01 - 0.1</p>
+                    <p>• <strong>Kd</strong>: 0 - 1.0</p>
+                    <p><em>特点：热惯性大，响应慢，适合PI控制</em></p>
+                </div>
+                
+                <div class="card">
+                    <h4>电机位置控制</h4>
+                    <p>• <strong>Kp</strong>: 0.5 - 5.0</p>
+                    <p>• <strong>Ki</strong>: 0.01 - 0.1</p>
+                    <p>• <strong>Kd</strong>: 0.1 - 1.0</p>
+                    <p><em>特点：需要快速响应和精确定位，PID均衡使用</em></p>
+                </div>
+                
+                <div class="card">
+                    <h4>四轴飞行器姿态控制</h4>
+                    <p>• <strong>Kp</strong>: 3.0 - 6.0</p>
+                    <p>• <strong>Ki</strong>: 0.01 - 0.05</p>
+                    <p>• <strong>Kd</strong>: 1.0 - 3.0</p>
+                    <p><em>特点：高要求的稳定性和响应速度，需要较强D项</em></p>
+                </div>
+                
+                <div class="card">
+                    <h4>液位控制系统</h4>
+                    <p>• <strong>Kp</strong>: 1.0 - 5.0</p>
+                    <p>• <strong>Ki</strong>: 0.05 - 0.2</p>
+                    <p>• <strong>Kd</strong>: 0 - 0.5</p>
+                    <p><em>特点：有时间滞后，I项较为重要</em></p>
+                </div>
+            </div>
+            
+            <div class="tips-card">
+                <h4>确定初始值的实用技巧</h4>
+                <p>1. <strong>查找相似系统案例</strong>：寻找与你系统相似的控制案例，参考其参数</p>
+                <p>2. <strong>了解系统动态特性</strong>：系统响应快慢、有无时延、是否有干扰等因素影响参数选择</p>
+                <p>3. <strong>考虑执行器限制</strong>：如果执行器输出有限制，适当降低控制参数初值</p>
+                <p>4. <strong>安全第一原则</strong>：总是从小参数开始调整，逐步增加，避免系统失控</p>
+            </div>
+        </section>
+        
+        <!-- 第四部分：PID实际应用 -->
+        <section class="section" id="pid-applications">
+            <h2>PID控制算法实际应用</h2>
+            
+            <p>PID控制在嵌入式系统中有广泛的应用，下面我们以几个常见的实际案例来加深理解。</p>
+            
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="app-temp">温度控制</button>
+                    <button class="tab-button" data-tab="app-motor">电机控制</button>
+                    <button class="tab-button" data-tab="app-drone">无人机</button>
+                </div>
+                
+                <!-- 温度控制应用 -->
+                <div class="tab-content active" id="app-temp">
+                    <div class="two-column">
+                        <div class="column">
+                            <h3>温度控制系统</h3>
+                            
+                            <p>温度控制是PID应用最广泛的领域之一，如3D打印机热床控制、恒温加热炉等。</p>
+                            
+                            <div class="highlight">
+                                <p><strong>控制流程：</strong></p>
+                                <p>1. <strong>传感器</strong>：温度传感器(如热电偶、PT100、NTC)读取当前温度</p>
+                                <p>2. <strong>误差计算</strong>：目标温度 - 当前温度 = 温度误差</p>
+                                <p>3. <strong>PID计算</strong>：根据温度误差计算加热功率</p>
+                                <p>4. <strong>输出控制</strong>：调整加热器功率（通常通过PWM控制）</p>
+                            </div>
+                            
+                            <div class="tips-card">
+                                <h4>温度控制系统调参建议</h4>
+                                <p>• 温度系统通常<strong>热惯性大</strong>，响应慢，积分时间常数大</p>
+                                <p>• 可以从<strong>PI控制</strong>开始，很多温度系统不需要D项</p>
+                                <p>• 防止<strong>积分饱和</strong>：当输出达到极限时，停止积分累加</p>
+                                <p>• 考虑<strong>温度过冲控制</strong>：当接近目标温度时减小P和I参数</p>
+                            </div>
+                        </div>
+                        
+                        <div class="column">
+                            <div class="chart-container">
+                                <canvas id="temp-chart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #007AFF;"></div>
+                                    <span>温度曲线</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF9500; border-style: dashed;"></div>
+                                    <span>目标温度</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #34C759;"></div>
+                                    <span>加热功率</span>
+                                </div>
+                            </div>
+                            
+                            <div class="tips-card">
+                                <h4>参数调整示例（3D打印机热床）</h4>
+                                <p>• <strong>初始参数</strong>：Kp=10.0, Ki=0.05, Kd=0</p>
+                                <p>• <strong>升温过慢</strong>：增加Kp到15.0</p>
+                                <p>• <strong>稳态误差</strong>：增加Ki到0.1</p>
+                                <p>• <strong>温度波动</strong>：减小Ki到0.07，加入小量Kd=1.0</p>
+                                <p>• <strong>最终参数</strong>：Kp=15.0, Ki=0.07, Kd=1.0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 电机控制应用 -->
+                <div class="tab-content" id="app-motor">
+                    <div class="two-column">
+                        <div class="column">
+                            <h3>电机位置与速度控制</h3>
+                            
+                            <p>电机控制是自动化和机器人领域的核心，如CNC机床、机械臂、精密伺服系统等。</p>
+                            
+                            <div class="highlight">
+                                <p><strong>控制流程：</strong></p>
+                                <p>1. <strong>传感器</strong>：编码器读取电机位置/速度</p>
+                                <p>2. <strong>误差计算</strong>：目标位置/速度 - 当前位置/速度</p>
+                                <p>3. <strong>PID计算</strong>：根据误差计算电机驱动电压/电流</p>
+                                <p>4. <strong>输出控制</strong>：通过PWM/DAC控制电机驱动器</p>
+                            </div>
+                            
+                            <div class="tips-card">
+                                <h4>电机控制系统调参建议</h4>
+                                <p>• <strong>级联控制</strong>：通常使用内外环级联控制（内环速度，外环位置）</p>
+                                <p>• <strong>先调内环</strong>：先调好速度环，再调位置环</p>
+                                <p>• <strong>D项关键</strong>：位置控制通常需要适当D项抑制超调</p>
+                                <p>• <strong>死区处理</strong>：处理电机启动死区，低速时增加最小驱动</p>
+                            </div>
+                        </div>
+                        
+                        <div class="column">
+                            <div class="chart-container">
+                                <canvas id="motor-chart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #007AFF;"></div>
+                                    <span>位置曲线</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF9500; border-style: dashed;"></div>
+                                    <span>目标位置</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF3B30;"></div>
+                                    <span>控制信号</span>
+                                </div>
+                            </div>
+                            
+                            <div class="tips-card">
+                                <h4>参数调整示例（伺服电机位置控制）</h4>
+                                <p>• <strong>初始参数</strong>：Kp=1.0, Ki=0.01, Kd=0.2</p>
+                                <p>• <strong>响应太慢</strong>：增加Kp到2.0</p>
+                                <p>• <strong>超调严重</strong>：增加Kd到0.5</p>
+                                <p>• <strong>稳态误差</strong>：增加Ki到0.03</p>
+                                <p>• <strong>最终参数</strong>：Kp=2.0, Ki=0.03, Kd=0.5</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 无人机应用 -->
+                <div class="tab-content" id="app-drone">
+                    <div class="two-column">
+                        <div class="column">
+                            <h3>无人机姿态控制</h3>
+                            
+                            <p>无人机依靠多个PID控制器来维持稳定飞行，包括姿态角（俯仰、横滚、偏航）和位置控制。</p>
+                            
+                            <div class="highlight">
+                                <p><strong>控制流程：</strong></p>
+                                <p>1. <strong>传感器</strong>：IMU(陀螺仪+加速度计)获取当前姿态</p>
+                                <p>2. <strong>误差计算</strong>：目标姿态角 - 当前姿态角</p>
+                                <p>3. <strong>级联PID</strong>：外环角度PID输出作为内环角速度PID的目标值</p>
+                                <p>4. <strong>输出控制</strong>：控制各电机转速差来调整姿态</p>
+                            </div>
+                            
+                            <div class="tips-card">
+                                <h4>无人机控制系统调参建议</h4>
+                                <p>• <strong>先内后外</strong>：先调节角速率环(内环)，再调节角度环(外环)</p>
+                                <p>• <strong>安全第一</strong>：参数从小开始调节，避免飞机失控</p>
+                                <p>• <strong>D项重要</strong>：无人机需要较大D项来提供阻尼，防止震荡</p>
+                                <p>• <strong>差异化参数</strong>：俯仰、横滚、偏航三个轴的参数通常不同</p>
+                            </div>
+                        </div>
+                        
+                        <div class="column">
+                            <div class="chart-container">
+                                <canvas id="drone-chart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #007AFF;"></div>
+                                    <span>俯仰角</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF9500;"></div>
+                                    <span>横滚角</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #FF3B30; border-style: dashed;"></div>
+                                    <span>目标角度</span>
+                                </div>
+                            </div>
+                            
+                            <div class="tips-card">
+                                <h4>参数调整示例（四轴飞行器）</h4>
+                                <p>• <strong>角速率环初始参数</strong>：Kp=4.0, Ki=0.02, Kd=0.5</p>
+                                <p>• <strong>响应迟缓</strong>：增加Kp到5.0</p>
+                                <p>• <strong>高频震荡</strong>：增加Kd到1.5，减小Ki到0.01</p>
+                                <p>• <strong>角度环参数</strong>：Kp=5.0, Ki=0.01, Kd=0</p>
+                                <p>• <strong>注意</strong>：不同飞行器参数差异很大，需根据实际情况调整</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 第五部分：PID常见问题与提高 -->
+        <section class="section" id="pid-tips">
+            <h2>PID控制常见问题与进阶技巧</h2>
+            
+            <p>在实际应用PID控制器时，常常会遇到各种问题和挑战。以下是一些常见问题及其解决方案，以及进阶优化技巧。</p>
+            
+            <div class="two-column">
+                <div class="column">
+                    <h3>常见问题与解决方案</h3>
+                    
+                    <div class="card">
+                        <h4><span class="indicator red"></span> 积分饱和问题</h4>
+                        <p><strong>现象</strong>：系统长时间达不到目标值时，积分项持续累积，造成严重超调</p>
+                        <p><strong>解决方案</strong>：</p>
+                        <p>• 实现<strong>积分限幅</strong>，限制积分项的最大值</p>
+                        <p>• 当输出达到极限时<strong>停止积分</strong>（积分冻结）</p>
+                        <p>• 实现<strong>积分分离算法</strong>，误差大时减小或关闭积分作用</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4><span class="indicator yellow"></span> 微分项噪声敏感问题</h4>
+                        <p><strong>现象</strong>：传感器噪声被微分项放大，导致控制输出抖动</p>
+                        <p><strong>解决方案</strong>：</p>
+                        <p>• 对传感器数据进行<strong>低通滤波</strong></p>
+                        <p>• 只对<strong>反馈值</strong>（而非误差）进行微分计算</p>
+                        <p>• 实现<strong>不完全微分</strong>，加入一阶滤波</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4><span class="indicator red"></span> 控制对象参数变化</h4>
+                        <p><strong>现象</strong>：系统参数随环境或工作点变化，固定参数PID性能下降</p>
+                        <p><strong>解决方案</strong>：</p>
+                        <p>• 实现<strong>增益调度</strong>：在不同工作点使用不同参数集</p>
+                        <p>• 采用<strong>自适应PID</strong>算法，在线调整参数</p>
+                        <p>• 使用<strong>模糊PID</strong>控制，根据误差状态调整参数</p>
+                    </div>
+                </div>
+                
+                <div class="column">
+                    <h3>进阶优化技巧</h3>
+                    
+                    <div class="card">
+                        <h4><span class="indicator green"></span> 变结构PID</h4>
+                        <p>根据误差大小自动切换控制策略：</p>
+                        <p>• <strong>误差大</strong>：以快速响应为主，大P小I无D</p>
+                        <p>• <strong>误差中</strong>：平衡响应和稳定性，适中PID</p>
+                        <p>• <strong>误差小</strong>：以稳定为主，小P适中I适当D</p>
+                        <p>实现方法：根据误差绝对值划分区间，每个区间使用不同参数集</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4><span class="indicator green"></span> 专家PID调参</h4>
+                        <p>基于经验规则自动调整PID参数：</p>
+                        <p>• <strong>超调大</strong>：减小Kp，增大Kd</p>
+                        <p>• <strong>上升慢</strong>：增大Kp</p>
+                        <p>• <strong>稳态误差大</strong>：增大Ki</p>
+                        <p>• <strong>振荡</strong>：减小Kp和Ki，增大Kd</p>
+                        <p>实现方法：编写规则表，在运行时根据系统响应特性自动微调参数</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4><span class="indicator green"></span> 前馈控制结合</h4>
+                        <p>将PID与前馈控制结合，提高对已知干扰的抑制能力：</p>
+                        <p>• 基于<strong>负载变化预测</strong>提前调整控制量</p>
+                        <p>• 基于<strong>系统模型</strong>计算理论控制量</p>
+                        <p>• 综合<strong>前馈项+PID修正项</strong>作为最终控制量</p>
+                        <p>优势：可显著提高对已知干扰的响应速度，减少PID修正工作</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>PID代码实现思路</h3>
+            
+            <div class="highlight">
+                <p>虽然不深入代码细节，但了解PID实现思路对理解算法很有帮助：</p>
+                <p>1. <strong>定义PID结构体</strong>：包含参数(Kp,Ki,Kd)、限幅值、中间变量等</p>
+                <p>2. <strong>初始化函数</strong>：设置初始参数、清零累积误差等</p>
+                <p>3. <strong>PID计算函数</strong>：</p>
+                <p>   • 计算当前误差(目标值-测量值)</p>
+                <p>   • 计算比例项 = Kp × 误差</p>
+                <p>   • 计算积分项 = 积分项 + Ki × 误差 × 时间间隔</p>
+                <p>   • 计算微分项 = Kd × (当前误差 - 上次误差) / 时间间隔</p>
+                <p>   • 应用积分限幅、输出限幅等策略</p>
+                <p>   • 计算最终输出 = 比例项 + 积分项 + 微分项</p>
+                <p>   • 保存当前误差供下次计算使用</p>
+                <p>4. <strong>定时调用</strong>：在固定时间间隔内调用PID计算函数</p>
+            </div>
+            
+            <div class="tips-card">
+                <h4>实际应用中的提示</h4>
+                <p>• <strong>采样时间一致性</strong>：尽量保证PID计算的调用间隔一致，使用定时器中断</p>
+                <p>• <strong>防止积分饱和</strong>：实现积分限幅、积分分离或积分冻结</p>
+                <p>• <strong>平滑输出变化</strong>：对PID输出进行限速处理，防止输出突变</p>
+                <p>• <strong>滤波预处理</strong>：对传感器输入进行滤波平滑处理，尤其在使用D项时</p>
+                <p>• <strong>抗干扰措施</strong>：实现死区处理，忽略很小的误差，防止系统抖动</p>
+            </div>
+        </section>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>PID控制算法学习互动页面</p>
+            <p class="copyright">© 2025 米醋电子工作室. 保留所有权利.</p>
+        </div>
+    </footer>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // 切换标签页功能
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                // 移除所有标签页和内容的活动状态
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // 添加当前标签页和内容的活动状态
+                button.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // 更新滑块值显示并重新生成图表
+        document.getElementById('kp-slider').addEventListener('input', function() {
+            const kpValue = parseFloat(this.value);
+            document.getElementById('kp-value').textContent = kpValue.toFixed(1);
+            
+            // 更新P控制器响应图表
+            updatePChart(kpValue);
+        });
+        
+        document.getElementById('ki-slider').addEventListener('input', function() {
+            const kiValue = parseFloat(this.value);
+            document.getElementById('ki-value').textContent = kiValue.toFixed(2);
+            
+            // 更新I控制器响应图表
+            updateIChart(kiValue);
+        });
+        
+        document.getElementById('kd-slider').addEventListener('input', function() {
+            const kdValue = parseFloat(this.value);
+            document.getElementById('kd-value').textContent = kdValue.toFixed(1);
+            
+            // 更新D控制器响应图表
+            updateDChart(kdValue);
+        });
+        
+        // 图表配置
+        const createChart = (canvasId, title, datasets) => {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '时间'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '数值'
+                            }
+                        }
+                    }
+                }
+            });
+        };
+        
+        // 生成PID响应数据（简化模拟）
+        const generatePIDResponse = (kp, ki, kd, disturbance = 0) => {
+            const data = [];
+            let setpoint = 100;
+            let value = 0;
+            let integralSum = 0;
+            let lastError = 0;
+            
+            for (let i = 0; i < 100; i++) {
+                const error = setpoint - value;
+                integralSum += error;
+                const derivativeError = error - lastError;
+                lastError = error;
+                
+                let output = kp * error + ki * integralSum + kd * derivativeError;
+                output = Math.min(Math.max(output, -20), 20); // 限幅
+                
+                if (disturbance && i === 60) {
+                    value -= disturbance; // 添加干扰
+                }
+                
+                value += output * 0.1; // 系统响应（简化模型）
+                value = Math.min(Math.max(value, 0), 120); // 限幅
+                
+                data.push(value);
+            }
+            
+            return data;
+        };
+        
+        // 定义全局变量存储图表对象，以便后续更新
+        let pChart, iChart, dChart;
+        
+        // 初始化P控制器响应图表
+        const initPChart = () => {
+            pChart = createChart('p-chart', 'P控制器响应曲线', [
+                {
+                    label: 'Kp = 0.5',
+                    data: generatePIDResponse(0.5, 0, 0),
+                    borderColor: '#007AFF',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Kp = 1.0',
+                    data: generatePIDResponse(1.0, 0, 0),
+                    borderColor: '#FF9500',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Kp = 2.0',
+                    data: generatePIDResponse(2.0, 0, 0),
+                    borderColor: '#FF3B30',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: '目标值',
+                    data: Array(100).fill(100),
+                    borderColor: '#999',
+                    borderDash: [5, 5],
+                    borderWidth: 1
+                }
+            ]);
+        };
+        
+        // 更新P控制器响应图表
+        const updatePChart = (kpValue) => {
+            // 销毁旧图表
+            if (pChart) {
+                pChart.destroy();
+            }
+            
+            // 创建新图表
+            pChart = createChart('p-chart', 'P控制器响应曲线', [
+                {
+                    label: 'Kp = 0.5',
+                    data: generatePIDResponse(0.5, 0, 0),
+                    borderColor: '#007AFF',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: `Kp = ${kpValue.toFixed(1)}`,
+                    data: generatePIDResponse(kpValue, 0, 0),
+                    borderColor: '#FF9500',
+                    tension: 0.3,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Kp = 2.0',
+                    data: generatePIDResponse(2.0, 0, 0),
+                    borderColor: '#FF3B30',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: '目标值',
+                    data: Array(100).fill(100),
+                    borderColor: '#999',
+                    borderDash: [5, 5],
+                    borderWidth: 1
+                }
+            ]);
+            
+            // 更新图例
+            document.querySelectorAll('#p-tab .chart-legend .legend-item')[1].querySelector('span').textContent = `Kp = ${kpValue.toFixed(1)}`;
+        };
+        
+        // 初始化I控制器响应图表
+        const initIChart = () => {
+            iChart = createChart('i-chart', 'I控制器响应曲线', [
+                {
+                    label: 'Ki = 0.05',
+                    data: generatePIDResponse(0.5, 0.05, 0),
+                    borderColor: '#007AFF',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Ki = 0.2',
+                    data: generatePIDResponse(0.5, 0.2, 0),
+                    borderColor: '#FF9500',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Ki = 0.5',
+                    data: generatePIDResponse(0.5, 0.5, 0),
+                    borderColor: '#FF3B30',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: '目标值',
+                    data: Array(100).fill(100),
+                    borderColor: '#999',
+                    borderDash: [5, 5],
+                    borderWidth: 1
+                }
+            ]);
+        };
+        
+        // 更新I控制器响应图表
+        const updateIChart = (kiValue) => {
+            // 销毁旧图表
+            if (iChart) {
+                iChart.destroy();
+            }
+            
+            // 创建新图表
+            iChart = createChart('i-chart', 'I控制器响应曲线', [
+                {
+                    label: 'Ki = 0.05',
+                    data: generatePIDResponse(0.5, 0.05, 0),
+                    borderColor: '#007AFF',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: `Ki = ${kiValue.toFixed(2)}`,
+                    data: generatePIDResponse(0.5, kiValue, 0),
+                    borderColor: '#FF9500',
+                    tension: 0.3,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Ki = 0.5',
+                    data: generatePIDResponse(0.5, 0.5, 0),
+                    borderColor: '#FF3B30',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: '目标值',
+                    data: Array(100).fill(100),
+                    borderColor: '#999',
+                    borderDash: [5, 5],
+                    borderWidth: 1
+                }
+            ]);
+            
+            // 更新图例
+            document.querySelectorAll('#i-tab .chart-legend .legend-item')[1].querySelector('span').textContent = `Ki = ${kiValue.toFixed(2)}`;
+        };
+        
+        // 初始化D控制器响应图表
+        const initDChart = () => {
+            dChart = createChart('d-chart', 'D控制器影响曲线', [
+                {
+                    label: 'Kd = 0',
+                    data: generatePIDResponse(1.0, 0.1, 0),
+                    borderColor: '#007AFF',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Kd = 0.5',
+                    data: generatePIDResponse(1.0, 0.1, 0.5),
+                    borderColor: '#FF9500',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Kd = 1.0',
+                    data: generatePIDResponse(1.0, 0.1, 1.0),
+                    borderColor: '#FF3B30',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: '目标值',
+                    data: Array(100).fill(100),
+                    borderColor: '#999',
+                    borderDash: [5, 5],
+                    borderWidth: 1
+                }
+            ]);
+        };
+        
+        // 更新D控制器响应图表
+        const updateDChart = (kdValue) => {
+            // 销毁旧图表
+            if (dChart) {
+                dChart.destroy();
+            }
+            
+            // 创建新图表
+            dChart = createChart('d-chart', 'D控制器影响曲线', [
+                {
+                    label: 'Kd = 0',
+                    data: generatePIDResponse(1.0, 0.1, 0),
+                    borderColor: '#007AFF',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: `Kd = ${kdValue.toFixed(1)}`,
+                    data: generatePIDResponse(1.0, 0.1, kdValue),
+                    borderColor: '#FF9500',
+                    tension: 0.3,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Kd = 1.0',
+                    data: generatePIDResponse(1.0, 0.1, 1.0),
+                    borderColor: '#FF3B30',
+                    tension: 0.3,
+                    borderWidth: 2
+                },
+                {
+                    label: '目标值',
+                    data: Array(100).fill(100),
+                    borderColor: '#999',
+                    borderDash: [5, 5],
+                    borderWidth: 1
+                }
+            ]);
+            
+            // 更新图例
+            document.querySelectorAll('#d-tab .chart-legend .legend-item')[1].querySelector('span').textContent = `Kd = ${kdValue.toFixed(1)}`;
+        };
+        
+        // 初始化所有图表
+        initPChart();
+        initIChart();
+        initDChart();
+        
+        // 创建温度控制图表
+        const generateTempChart = () => {
+            const tempData = [];
+            const powerData = [];
+            let temp = 25;
+            let setpoint = 100;
+            const kp = 15, ki = 0.07, kd = 1.0;
+            let integralSum = 0;
+            let lastError = 0;
+            
+            for (let i = 0; i < 100; i++) {
+                const error = setpoint - temp;
+                integralSum += error;
+                const derivativeError = error - lastError;
+                lastError = error;
+                
+                let output = kp * error + ki * integralSum + kd * derivativeError;
+                output = Math.min(Math.max(output, 0), 100); // 限幅
+                
+                powerData.push(output);
+                
+                // 温度系统模型（简化）
+                const heatFlow = output * 0.1;
+                const cooling = (temp - 25) * 0.01;
+                temp += heatFlow - cooling;
+                
+                tempData.push(temp);
+            }
+            
+            const ctx = document.getElementById('temp-chart').getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: '温度曲线',
+                            data: tempData,
+                            borderColor: '#007AFF',
+                            tension: 0.3,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '目标温度',
+                            data: Array(100).fill(setpoint),
+                            borderColor: '#FF9500',
+                            borderDash: [5, 5],
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '加热功率',
+                            data: powerData,
+                            borderColor: '#34C759',
+                            tension: 0.3,
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '温度控制系统响应',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '时间(s)'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '温度(°C)'
+                            },
+                            min: 0,
+                            max: 120
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '功率(%)'
+                            },
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        };
+        
+        // 创建电机控制图表
+        const generateMotorChart = () => {
+            const positionData = [];
+            const controlData = [];
+            let position = 0;
+            let velocity = 0;
+            let setpoint = 100;
+            const kp = 2, ki = 0.03, kd = 0.5;
+            let integralSum = 0;
+            let lastError = 0;
+            
+            for (let i = 0; i < 100; i++) {
+                // 阶跃输入
+                if (i === 10) {
+                    setpoint = 100;
+                }
+                
+                const error = setpoint - position;
+                integralSum += error;
+                const derivativeError = error - lastError;
+                lastError = error;
+                
+                let output = kp * error + ki * integralSum + kd * derivativeError;
+                output = Math.min(Math.max(output, -100), 100); // 限幅
+                
+                controlData.push(output);
+                
+                // 电机系统模型（简化）
+                velocity += output * 0.1;
+                velocity *= 0.9; // 阻尼
+                position += velocity;
+                
+                positionData.push(position);
+            }
+            
+            const ctx = document.getElementById('motor-chart').getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: '位置曲线',
+                            data: positionData,
+                            borderColor: '#007AFF',
+                            tension: 0.3,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '目标位置',
+                            data: Array(10).fill(0).concat(Array(90).fill(setpoint)),
+                            borderColor: '#FF9500',
+                            borderDash: [5, 5],
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '控制信号',
+                            data: controlData,
+                            borderColor: '#FF3B30',
+                            tension: 0.3,
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '电机位置控制响应',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '时间(ms)'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '位置'
+                            },
+                            min: -20,
+                            max: 120
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '控制信号'
+                            },
+                            min: -100,
+                            max: 100,
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        };
+        
+        // 创建无人机姿态图表
+        const generateDroneChart = () => {
+            const pitchData = [];
+            const rollData = [];
+            let pitch = 0;
+            let roll = 0;
+            let pitchVelocity = 0;
+            let rollVelocity = 0;
+            const setpoint = 0;
+            const kp = 5, ki = 0.01, kd = 1.5;
+            
+            for (let i = 0; i < 100; i++) {
+                // 模拟干扰
+                if (i === 20) {
+                    pitch += 20;
+                    roll += 15;
+                }
+                if (i === 60) {
+                    roll -= 10;
+                }
+                
+                // 俯仰角PID
+                const pitchError = setpoint - pitch;
+                let pitchOutput = kp * pitchError + kd * (-pitchVelocity);
+                pitchOutput = Math.min(Math.max(pitchOutput, -50), 50);
+                
+                // 横滚角PID
+                const rollError = setpoint - roll;
+                let rollOutput = kp * rollError + kd * (-rollVelocity);
+                rollOutput = Math.min(Math.max(rollOutput, -50), 50);
+                
+                // 无人机动力学（简化）
+                pitchVelocity += pitchOutput * 0.1;
+                pitchVelocity *= 0.9; // 阻尼
+                pitch += pitchVelocity;
+                
+                rollVelocity += rollOutput * 0.1;
+                rollVelocity *= 0.9; // 阻尼
+                roll += rollVelocity;
+                
+                pitchData.push(pitch);
+                rollData.push(roll);
+            }
+            
+            const ctx = document.getElementById('drone-chart').getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: '俯仰角',
+                            data: pitchData,
+                            borderColor: '#007AFF',
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: '横滚角',
+                            data: rollData,
+                            borderColor: '#FF9500',
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: '目标角度',
+                            data: Array(100).fill(0),
+                            borderColor: '#FF3B30',
+                            borderDash: [5, 5],
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '无人机姿态控制响应',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '时间(ms)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '角度(°)'
+                            },
+                            min: -30,
+                            max: 30
+                        }
+                    }
+                }
+            });
+        };
+        
+        // 创建应用图表
+        const tempChart = generateTempChart();
+        const motorChart = generateMotorChart();
+        const droneChart = generateDroneChart();
+        
+        // 确保动画容器在较小屏幕上也能正常显示目标点
+        const adjustTargetPosition = () => {
+            const animationContainer = document.querySelector('.animation-container');
+            const targetPoint = document.getElementById('target-point');
+            if (animationContainer && targetPoint) {
+                const containerWidth = animationContainer.offsetWidth;
+                // 设置目标点位置为容器宽度的80%，但不小于250px
+                const targetPosition = Math.max(containerWidth * 0.8, Math.min(600, containerWidth - 50));
+                targetPoint.style.left = targetPosition + 'px';
+            }
+        };
+        
+        // 页面加载和窗口大小变化时调整目标点位置
+        window.addEventListener('load', adjustTargetPosition);
+        window.addEventListener('resize', adjustTargetPosition);
+        
+        // 修复目标点显示问题
+        document.addEventListener('DOMContentLoaded', function() {
+            // 确保目标点样式正确应用
+            const targetPoint = document.getElementById('target-point');
+            if (targetPoint) {
+                targetPoint.style.backgroundColor = '#FF9500';
+                targetPoint.style.width = '40px';
+                targetPoint.style.height = '40px';
+                targetPoint.style.opacity = '0.8';
+                targetPoint.style.zIndex = '5';
+                
+                // 强制重绘
+                setTimeout(() => {
+                    targetPoint.style.display = 'none';
+                    setTimeout(() => {
+                        targetPoint.style.display = 'block';
+                    }, 10);
+                }, 100);
+            }
+        });
+        
+        // 重构动画系统，使用更平滑的动画更新
+        let animationInterval; // 添加变量定义
+        let animationFrameId; // 添加变量定义
+        const controlPoint = document.getElementById('control-point');
+        const targetPoint = document.getElementById('target-point');
+
+        const runAnimation = (controlType) => {
+            // 清除之前的动画
+            clearInterval(animationInterval);
+            cancelAnimationFrame(animationFrameId);
+            
+            // 重置控制点位置
+            controlPoint.style.left = '100px';
+            controlPoint.style.transition = 'none';
+            
+            // 设置初始值
+            let position = 100;
+            const targetPosition = parseInt(targetPoint.style.left) || 600;
+            let velocity = 0;
+            let integralSum = 0;
+            let lastError = 0;
+            let lastTime = performance.now();
+            
+            // 设置各控制类型的参数
+            let kp, ki, kd;
+            switch(controlType) {
+                case 'p':
+                    kp = 0.15;
+                    ki = 0;
+                    kd = 0;
+                    break;
+                case 'pi':
+                    kp = 0.15;
+                    ki = 0.0005;
+                    kd = 0;
+                    break;
+                case 'pid':
+                    kp = 0.15;
+                    ki = 0.0005;
+                    kd = 0.8;
+                    break;
+                default:
+                    kp = 0.15;
+                    ki = 0.0005;
+                    kd = 0.8;
+            }
+            
+            // 动画更新函数
+            const updateAnimation = (currentTime) => {
+                // 计算时间差
+                const deltaTime = currentTime - lastTime;
+                lastTime = currentTime;
+                
+                // 防止时间差过大导致不稳定
+                if (deltaTime > 100) {
+                    animationFrameId = requestAnimationFrame(updateAnimation);
+                    return;
+                }
+                
+                // 计算误差
+                const error = targetPosition - position;
+                
+                // 更新积分项
+                integralSum += error * (deltaTime / 16.67); // 归一化到约60fps的积分增量
+                
+                // 限制积分项，防止积分饱和
+                integralSum = Math.min(Math.max(integralSum, -2000), 2000);
+                
+                // 计算微分项
+                const derivativeError = error - lastError;
+                const derivative = derivativeError / (deltaTime / 16.67); // 归一化到约60fps的变化率
+                lastError = error;
+                
+                // 计算PID输出
+                let output = kp * error + ki * integralSum + kd * derivative;
+                
+                // 限制输出，模拟真实系统限制
+                output = Math.min(Math.max(output, -10), 10);
+                
+                // 更新速度和位置
+                velocity = velocity * 0.85 + output; // 添加一些阻尼
+                position += velocity * (deltaTime / 16.67); // 归一化到约60fps的位置变化
+                
+                // 限制位置范围
+                position = Math.min(Math.max(position, 0), window.innerWidth - 100);
+                
+                // 更新控制点位置
+                controlPoint.style.left = position + 'px';
+                
+                // 检查是否达到目标
+                if (Math.abs(error) < 3 && Math.abs(velocity) < 0.5) {
+                    // 如果接近目标且几乎静止，则停止动画
+                    cancelAnimationFrame(animationFrameId);
+                    return;
+                }
+                
+                // 继续动画
+                animationFrameId = requestAnimationFrame(updateAnimation);
+            };
+            
+            // 启动动画循环
+            animationFrameId = requestAnimationFrame(updateAnimation);
+        };
+        
+        // 重置动画
+        document.getElementById('reset-animation').addEventListener('click', () => {
+            clearInterval(animationInterval);
+            cancelAnimationFrame(animationFrameId);
+            controlPoint.style.transition = 'all 0.5s ease';
+            controlPoint.style.left = '100px';
+        });
+        
+        // 仅P控制动画
+        document.getElementById('start-p-only').addEventListener('click', () => {
+            runAnimation('p');
+        });
+        
+        // PI控制动画
+        document.getElementById('start-pi').addEventListener('click', () => {
+            runAnimation('pi');
+        });
+        
+        // 完整PID控制动画
+        document.getElementById('start-pid').addEventListener('click', () => {
+            runAnimation('pid');
+        });
+    </script>
+</body>
+</html>
