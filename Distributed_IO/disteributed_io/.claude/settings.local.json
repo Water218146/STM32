@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(python generate_stack_heap_diagrams.py:*)"
+    ]
+  }
+}

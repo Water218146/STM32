@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能终端管理系统 - WebSocket 测试</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>智能终端管理系统 - 通信测试</h1>
+        
+        <div class="control-panel">
+            <div class="input-group">
+                <label for="server-address">服务器地址:</label>
+                <input type="text" id="server-address" value="127.0.0.1" placeholder="例如: 127.0.0.1">
+            </div>
+            <div class="input-group">
+                <label for="server-port">端口:</label>
+                <input type="number" id="server-port" value="8080" placeholder="例如: 8080">
+            </div>
+            <button id="connect-btn">连接服务器</button>
+            <span id="connection-status" class="status disconnected">未连接</span>
+        </div>
+
+        <div class="message-area">
+            <div class="log-container">
+                <h3>通信日志</h3>
+                <div id="message-log"></div>
+            </div>
+            
+            <div class="send-panel">
+                <input type="text" id="message-input" placeholder="输入要发送的消息...">
+                <button id="send-btn" disabled>发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

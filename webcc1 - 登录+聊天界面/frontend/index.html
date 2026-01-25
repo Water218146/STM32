@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="WebCC1终端管理系统 - WebSocket通信界面">
+    <meta name="author" content="Water21">
+    <title>WebCC1 终端管理系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        // 不需要跳转到登录页，直接在主页面登录
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header区域 -->
+        <header class="header">
+            <h1 class="title">终端管理系统</h1>
+            <div class="status-indicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-text" id="connectionStatus">未连接</span>
+            </div>
+        </header>
+
+        <!-- 模式选择器 -->
+        <section class="mode-selector">
+            <button class="mode-tab active" data-mode="chat">
+                聊天模式
+            </button>
+            <button class="mode-tab" data-mode="led">
+                LED控制
+            </button>
+        </section>
+
+        <!-- 连接配置面板 -->
+        <section class="connection-panel">
+            <div class="config-group">
+                <div class="input-group-single">
+                    <label for="serverUrl">服务器地址</label>
+                    <input
+                        type="text"
+                        id="serverUrl"
+                        placeholder="例如: www.water21.top 或 localhost:8080"
+                        value="www.water21.top"
+                    >
+                </div>
+            </div>
+            <div class="button-group">
+                <button id="connectBtn" class="btn btn-primary">连接</button>
+                <button id="disconnectBtn" class="btn btn-secondary" disabled>断开连接</button>
+            </div>
+        </section>
+
+        <!-- 客户端信息区 -->
+        <section class="client-info">
+            <div class="info-item">
+                <span class="info-label">当前用户:</span>
+                <span class="info-value" id="username">未登录</span>
+            </div>
+            <div class="info-item">
+                <button id="logoutBtn" class="btn btn-secondary btn-small">登出</button>
+            </div>
+        </section>
+
+        <!-- MCU监视窗口（仅管理员可见） -->
+        <section class="mcu-monitor" id="mcuMonitor" style="display: none;">
+            <div class="monitor-header">
+                <h3>📶 MCU 设备监控</h3>
+                <span class="monitor-status" id="mcuStatusText">未连接</span>
+            </div>
+            <div class="monitor-content">
+                <div class="device-list" id="mcuDeviceList">
+                    <div class="no-device">暂无 MCU 设备在线</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 聊天模式内容（默认显示） -->
+        <div class="mode-content active" id="chatMode">
+            <!-- 消息显示区 -->
+            <section class="message-section">
+                <h2 class="section-title">消息记录</h2>
+                <div class="message-container" id="messageContainer">
+                    <div class="welcome-message">
+                        <p>欢迎使用WebCC1终端管理系统</p>
+                        <p>请先连接到服务器开始通信</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 消息发送面板 -->
+            <section class="send-panel">
+                <div class="input-wrapper">
+                    <input
+                        type="text"
+                        id="messageInput"
+                        placeholder="输入消息内容..."
+                        disabled
+                        maxlength="500"
+                    >
+                    <button id="sendBtn" class="btn btn-send" disabled>发送</button>
+                </div>
+                <div class="input-hint">
+                    <span>提示: 按Enter键快速发送</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- LED控制模式内容（默认隐藏） -->
+        <div class="mode-content" id="ledMode">
+            <section class="led-control-section">
+                <h2 class="section-title">LED控制面板</h2>
+
+                <!-- LED状态显示区 -->
+                <div class="led-status-panel">
+                    <div class="led-item" data-led="1">
+                        <div class="led-indicator" id="led1"></div>
+                        <span class="led-label">LED 1</span>
+                    </div>
+                    <div class="led-item" data-led="2">
+                        <div class="led-indicator" id="led2"></div>
+                        <span class="led-label">LED 2</span>
+                    </div>
+                    <div class="led-item" data-led="3">
+                        <div class="led-indicator" id="led3"></div>
+                        <span class="led-label">LED 3</span>
+                    </div>
+                    <div class="led-item" data-led="4">
+                        <div class="led-indicator" id="led4"></div>
+                        <span class="led-label">LED 4</span>
+                    </div>
+                    <div class="led-item" data-led="5">
+                        <div class="led-indicator" id="led5"></div>
+                        <span class="led-label">LED 5</span>
+                    </div>
+                    <div class="led-item" data-led="6">
+                        <div class="led-indicator" id="led6"></div>
+                        <span class="led-label">LED 6</span>
+                    </div>
+                    <div class="led-item" data-led="7">
+                        <div class="led-indicator" id="led7"></div>
+                        <span class="led-label">LED 7</span>
+                    </div>
+                    <div class="led-item" data-led="8">
+                        <div class="led-indicator" id="led8"></div>
+                        <span class="led-label">LED 8</span>
+                    </div>
+                </div>
+
+                <!-- LED控制按钮区 -->
+                <div class="led-control-buttons">
+                    <button class="btn btn-primary" id="refreshLedStatus">刷新状态</button>
+                    <button class="btn btn-success" id="allLedOn">全部打开</button>
+                    <button class="btn btn-danger" id="allLedOff">全部关闭</button>
+                </div>
+
+                <!-- LED消息日志 -->
+                <div class="led-log-container" id="ledLog"></div>
+            </section>
+        </div>
+
+        <!-- Footer区域 -->
+        <footer class="footer">
+            <div class="footer-info">
+                <span>在线用户: <strong id="onlineCount">0</strong></span>
+                <span class="separator">|</span>
+                <span>WebCC1 v1.0.0</span>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2026 Water21. All rights reserved.
+            </div>
+        </footer>
+    </div>
+
+    <!-- 引入前端逻辑脚本 -->
+    <script src="js/app.js"></script>
+</body>
+</html>

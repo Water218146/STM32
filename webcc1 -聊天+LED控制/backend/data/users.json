@@ -1,0 +1,71 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "water",
+      "password": "lu123456",
+      "createdAt": "2026-01-23T21:36:47.586Z"
+    },
+    {
+      "id": 2,
+      "username": "water1",
+      "password": "lu123456",
+      "createdAt": "2026-01-23T21:38:21.837Z"
+    },
+    {
+      "id": 3,
+      "username": "testuser",
+      "password": "123456",
+      "createdAt": "2026-01-23T22:01:12.922Z"
+    },
+    {
+      "id": 4,
+      "username": "user2",
+      "password": "123456",
+      "createdAt": "2026-01-23T22:55:39.213Z"
+    },
+    {
+      "id": 5,
+      "username": "sheepyjb",
+      "password": "040828",
+      "createdAt": "2026-01-24T05:11:58.231Z"
+    },
+    {
+      "id": 6,
+      "username": "hlx215809",
+      "password": "hlx215809",
+      "createdAt": "2026-01-24T08:00:51.597Z"
+    },
+    {
+      "id": 7,
+      "username": "18cm猛男阳诚",
+      "password": "bbj123456",
+      "createdAt": "2026-01-24T08:04:08.820Z"
+    },
+    {
+      "id": 8,
+      "username": "小陆乱撞",
+      "password": "123456",
+      "createdAt": "2026-01-24T08:13:17.067Z"
+    },
+    {
+      "id": 9,
+      "username": "xin",
+      "password": "123456",
+      "createdAt": "2026-01-24T09:08:52.813Z"
+    },
+    {
+      "id": 10,
+      "username": "早安！",
+      "password": "ooooiiiillll1111",
+      "createdAt": "2026-01-24T11:30:36.447Z"
+    },
+    {
+      "id": 11,
+      "username": "yyyy",
+      "password": "123456",
+      "createdAt": "2026-01-25T16:33:48.155Z"
+    }
+  ],
+  "nextId": 12
+}

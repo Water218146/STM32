@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="WebCC1终端管理系统 - WebSocket通信界面">
+    <meta name="author" content="Water21">
+    <title>WebCC1 终端管理系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        // 不需要跳转到登录页，直接在主页面登录
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header区域 -->
+        <header class="header">
+            <h1 class="title">终端管理系统</h1>
+            <div class="status-indicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-text" id="connectionStatus">未连接</span>
+            </div>
+        </header>
+
+        <!-- 模式选择器 -->
+        <section class="mode-selector">
+            <button class="mode-tab active" data-mode="chat">
+                聊天模式
+            </button>
+            <button class="mode-tab" data-mode="mcu">
+                MCU控制
+            </button>
+        </section>
+
+        <!-- 连接配置面板 -->
+        <section class="connection-panel">
+            <div class="config-group">
+                <div class="input-group-single">
+                    <label for="serverUrl">服务器地址</label>
+                    <input
+                        type="text"
+                        id="serverUrl"
+                        placeholder="例如: www.water21.top 或 localhost:8080"
+                        value="www.water21.top"
+                    >
+                </div>
+            </div>
+            <div class="button-group">
+                <button id="connectBtn" class="btn btn-primary">连接</button>
+                <button id="disconnectBtn" class="btn btn-secondary" disabled>断开连接</button>
+            </div>
+        </section>
+
+        <!-- 客户端信息区 -->
+        <section class="client-info">
+            <div class="info-item">
+                <span class="info-label">当前用户:</span>
+                <span class="info-value" id="username">未登录</span>
+            </div>
+            <div class="info-item">
+                <button id="logoutBtn" class="btn btn-secondary btn-small">登出</button>
+            </div>
+        </section>
+
+        <!-- MCU监视窗口（仅管理员可见） -->
+        <section class="mcu-monitor" id="mcuMonitor" style="display: none;">
+            <div class="monitor-header">
+                <h3>📶 MCU 设备监控</h3>
+                <span class="monitor-status" id="mcuStatusText">未连接</span>
+            </div>
+            <div class="monitor-content">
+                <div class="device-list" id="mcuDeviceList">
+                    <div class="no-device">暂无 MCU 设备在线</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 聊天模式内容（默认显示） -->
+        <div class="mode-content active" id="chatMode">
+            <!-- 消息显示区 -->
+            <section class="message-section">
+                <h2 class="section-title">消息记录</h2>
+                <div class="message-container" id="messageContainer">
+                    <div class="welcome-message">
+                        <p>欢迎使用WebCC1终端管理系统</p>
+                        <p>请先连接到服务器开始通信</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 消息发送面板 -->
+            <section class="send-panel">
+                <div class="input-wrapper">
+                    <input
+                        type="text"
+                        id="messageInput"
+                        placeholder="输入消息内容..."
+                        disabled
+                        maxlength="500"
+                    >
+                    <button id="sendBtn" class="btn btn-send" disabled>发送</button>
+                </div>
+                <div class="input-hint">
+                    <span>提示: 按Enter键快速发送</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- MCU控制模式内容（默认隐藏） -->
+        <div class="mode-content" id="mcuMode">
+            <section class="mcu-control-section">
+                <h2 class="section-title">MCU设备控制</h2>
+
+                <!-- 传感器数据显示区 -->
+                <div class="sensor-panel">
+                    <h3 class="panel-title">📊 传感器数据</h3>
+                    <div class="sensor-grid">
+                        <div class="sensor-card" id="tempSensor">
+                            <span class="sensor-icon">🌡️</span>
+                            <div class="sensor-info">
+                                <span class="sensor-name">温度</span>
+                                <span class="sensor-value" id="tempValue">--</span>
+                                <span class="sensor-unit">℃</span>
+                            </div>
+                        </div>
+                        <div class="sensor-card" id="humidSensor">
+                            <span class="sensor-icon">💧</span>
+                            <div class="sensor-info">
+                                <span class="sensor-name">湿度</span>
+                                <span class="sensor-value" id="humidValue">--</span>
+                                <span class="sensor-unit">%</span>
+                            </div>
+                        </div>
+                        <div class="sensor-card" id="lightSensor">
+                            <span class="sensor-icon">☀️</span>
+                            <div class="sensor-info">
+                                <span class="sensor-name">光照</span>
+                                <span class="sensor-value" id="lightValue">--</span>
+                                <span class="sensor-unit">Lux</span>
+                            </div>
+                        </div>
+                        <div class="sensor-card" id="voltageSensor">
+                            <span class="sensor-icon">🔋</span>
+                            <div class="sensor-info">
+                                <span class="sensor-name">电压</span>
+                                <span class="sensor-value" id="voltageValue">--</span>
+                                <span class="sensor-unit">V</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 传感器数据由MCU主动上报，无需刷新按钮 -->
+                </div>
+
+                <!-- LED控制区 -->
+                <div class="led-panel">
+                    <h3 class="panel-title">💡 LED控制</h3>
+                    <div class="led-grid">
+                        <div class="led-item" data-led="1">
+                            <div class="led-indicator" id="led1"></div>
+                            <span class="led-label">LED 1</span>
+                        </div>
+                        <div class="led-item" data-led="2">
+                            <div class="led-indicator" id="led2"></div>
+                            <span class="led-label">LED 2</span>
+                        </div>
+                        <div class="led-item" data-led="3">
+                            <div class="led-indicator" id="led3"></div>
+                            <span class="led-label">LED 3</span>
+                        </div>
+                        <div class="led-item" data-led="4">
+                            <div class="led-indicator" id="led4"></div>
+                            <span class="led-label">LED 4</span>
+                        </div>
+                        <div class="led-item" data-led="5">
+                            <div class="led-indicator" id="led5"></div>
+                            <span class="led-label">LED 5</span>
+                        </div>
+                        <div class="led-item" data-led="6">
+                            <div class="led-indicator" id="led6"></div>
+                            <span class="led-label">LED 6</span>
+                        </div>
+                    </div>
+                    <div class="led-control-buttons">
+                        <!-- LED状态由MCU主动反馈，无需刷新按钮 -->
+                        <button class="btn btn-success btn-small" id="allLedOn">全开</button>
+                        <button class="btn btn-danger btn-small" id="allLedOff">全关</button>
+                    </div>
+                </div>
+
+                <!-- 继电器控制区 -->
+                <div class="relay-panel">
+                    <h3 class="panel-title">🔌 继电器控制</h3>
+                    <div class="relay-grid">
+                        <div class="relay-item" data-relay="1">
+                            <span class="relay-label">继电器 1</span>
+                            <div class="relay-controls">
+                                <button class="btn btn-success btn-small relay-on">打开</button>
+                                <button class="btn btn-danger btn-small relay-off">关闭</button>
+                            </div>
+                            <div class="relay-status" id="relay1Status">--</div>
+                        </div>
+                        <div class="relay-item" data-relay="2">
+                            <span class="relay-label">继电器 2</span>
+                            <div class="relay-controls">
+                                <button class="btn btn-success btn-small relay-on">打开</button>
+                                <button class="btn btn-danger btn-small relay-off">关闭</button>
+                            </div>
+                            <div class="relay-status" id="relay2Status">--</div>
+                        </div>
+                        <div class="relay-item" data-relay="3">
+                            <span class="relay-label">继电器 3</span>
+                            <div class="relay-controls">
+                                <button class="btn btn-success btn-small relay-on">打开</button>
+                                <button class="btn btn-danger btn-small relay-off">关闭</button>
+                            </div>
+                            <div class="relay-status" id="relay3Status">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 电机控制区 -->
+                <div class="motor-panel">
+                    <h3 class="panel-title">⚙️ 电机控制</h3>
+                    <div class="motor-controls">
+                        <button class="btn btn-success" id="motorFwd">正转</button>
+                        <button class="btn btn-danger" id="motorRev">反转</button>
+                        <button class="btn btn-secondary" id="motorStop">停止</button>
+                    </div>
+                    <div class="motor-status">
+                        <span class="motor-label">当前状态:</span>
+                        <span class="motor-value" id="motorStatus">--</span>
+                    </div>
+                </div>
+
+                <!-- PWM控制区 -->
+                <div class="pwm-panel">
+                    <h3 class="panel-title">🎚️ PWM占空比控制</h3>
+                    <div class="pwm-controls">
+                        <input type="range" id="pwmSlider" min="0" max="100" value="50" class="pwm-slider">
+                        <span class="pwm-value" id="pwmValue">50%</span>
+                    </div>
+                    <div class="pwm-actions">
+                        <button class="btn btn-primary btn-small" id="pwmSend">发送PWM</button>
+                    </div>
+                </div>
+
+                <!-- MCU消息日志 -->
+                <div class="mcu-log-container">
+                    <div class="log-title">📝 MCU通信日志</div>
+                    <div class="log-content" id="mcuLog"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer区域 -->
+        <footer class="footer">
+            <div class="footer-info">
+                <span>在线用户: <strong id="onlineCount">0</strong></span>
+                <span class="separator">|</span>
+                <span>WebCC1 v1.0.0</span>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2026 Water21. All rights reserved.
+            </div>
+        </footer>
+    </div>
+
+    <!-- 引入前端逻辑脚本 -->
+    <script src="js/app.js"></script>
+</body>
+</html>

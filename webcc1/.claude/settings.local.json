@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm start)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell \"Stop-Process -Id 56424 -Force\")",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell \"Stop-Process -Id 54980 -Force\")",
+      "WebFetch(domain:yinerda.yuque.com)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(tasklist:*)",
+      "Bash(node test_mcu_auth.js:*)",
+      "Bash(node:*)"
+    ]
+  }
+}

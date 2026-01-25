@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - WebCC1 终端管理系统</title>
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <h1 class="login-title">WebCC1 终端管理系统</h1>
+
+            <!-- 模式切换 -->
+            <div class="mode-tabs">
+                <button class="mode-tab active" data-mode="login">登录</button>
+                <button class="mode-tab" data-mode="register">注册</button>
+            </div>
+
+            <!-- 登录表单 -->
+            <div class="form-container active" id="loginForm">
+                <div class="input-group">
+                    <label for="loginUsername">用户名</label>
+                    <input type="text" id="loginUsername" placeholder="请输入用户名" autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password">
+                </div>
+                <button class="btn btn-primary" id="loginBtn">登录</button>
+            </div>
+
+            <!-- 注册表单 -->
+            <div class="form-container" id="registerForm">
+                <div class="input-group">
+                    <label for="regUsername">用户名</label>
+                    <input type="text" id="regUsername" placeholder="3-20个字符" autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label for="regPassword">密码</label>
+                    <input type="password" id="regPassword" placeholder="至少6个字符" autocomplete="new-password">
+                </div>
+                <div class="input-group">
+                    <label for="regPasswordConfirm">确认密码</label>
+                    <input type="password" id="regPasswordConfirm" placeholder="再次输入密码" autocomplete="new-password">
+                </div>
+                <button class="btn btn-primary" id="registerBtn">注册</button>
+            </div>
+
+            <!-- 消息提示 -->
+            <div class="message-box" id="messageBox"></div>
+        </div>
+    </div>
+
+    <script src="js/login.js"></script>
+</body>
+</html>
