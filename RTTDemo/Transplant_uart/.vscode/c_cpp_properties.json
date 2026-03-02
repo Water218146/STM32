@@ -25,7 +25,7 @@
                 "USE_HAL_DRIVER",
                 "__RTTHREAD__"
             ],
-            "compilerPath": "",
+            "compilerPath": "D:/MounRiverStudio/MounRiver_Studio/toolchain/arm-none-eabi-gcc/bin/arm-none-eabi-gcc.exe",
             "cStandard": "c99",
             "cppStandard": "c++11",
             "intelliSenseMode": "gcc-arm",
