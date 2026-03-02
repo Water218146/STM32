@@ -1,0 +1,18 @@
+{
+    "files.associations": {
+        "*.h": "c",
+        "*.c": "c",
+        "rtconfig.h": "c",
+        "rtconfig_preinc.h": "c"
+    },
+    "files.exclude": {
+        "**/*.pyc": true,
+        "**/*.o": true,
+        "**/*.d": true,
+        "**/build": true,
+        "**/Debug": true
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.errorSquiggles": "enabled",
+    "editor.formatOnSave": false
+}

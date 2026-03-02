@@ -1,0 +1,38 @@
+{
+    "configurations": [
+        {
+            "name": "STM32F429-RTThread",
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}/APP",
+                "${workspaceFolder}/applications",
+                "${workspaceFolder}/drivers",
+                "${workspaceFolder}/drivers/include",
+                "${workspaceFolder}/Components/oled_driver",
+                "${workspaceFolder}/rt-thread/include",
+                "${workspaceFolder}/rt-thread/components/drivers/include",
+                "${workspaceFolder}/rt-thread/components/drivers/serial",
+                "${workspaceFolder}/rt-thread/components/finsh",
+                "${workspaceFolder}/rt-thread/components/libc/compilers/newlib",
+                "${workspaceFolder}/rt-thread/components/libc/compilers/common",
+                "${workspaceFolder}/libraries/CMSIS/Include",
+                "${workspaceFolder}/libraries/CMSIS/Device/ST/STM32F4xx/Include",
+                "${workspaceFolder}/libraries/STM32F4xx_HAL_Driver/Inc",
+                "${workspaceFolder}/cubemx/Inc"
+            ],
+            "defines": [
+                "STM32F429xx",
+                "USE_HAL_DRIVER",
+                "__RTTHREAD__"
+            ],
+            "compilerPath": "",
+            "cStandard": "c99",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "gcc-arm",
+            "forcedInclude": [
+                "${workspaceFolder}/rtconfig.h"
+            ]
+        }
+    ],
+    "version": 4
+}
