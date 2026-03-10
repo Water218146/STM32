@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助手测试页面</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #667eea; }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI助手测试页面</h1>
+        <p>用于快速测试AI助手功能是否正常</p>
+
+        <!-- 测试1：基础路由 -->
+        <div class="test-section">
+            <h3>测试1：基础API路由</h3>
+            <p>测试Express路由是否正常工作</p>
+            <button class="btn-primary" onclick="testBasicRoute()">运行测试</button>
+            <div id="test1-result"></div>
+        </div>
+
+        <!-- 测试2：登录Token -->
+        <div class="test-section">
+            <h3>测试2：获取登录Token</h3>
+            <input type="text" id="username" placeholder="输入用户名（如：water）" value="water">
+            <input type="text" id="password" placeholder="输入密码" value="123456">
+            <button class="btn-primary" onclick="testLogin()">登录获取Token</button>
+            <div id="test2-result"></div>
+        </div>
+
+        <!-- 测试3：AI对话 -->
+        <div class="test-section">
+            <h3>测试3：AI对话测试</h3>
+            <input type="text" id="testMessage" placeholder="输入测试消息（如：你好）" value="你好">
+            <button class="btn-primary" onclick="testAIChat()">发送AI消息</button>
+            <button class="btn-secondary" onclick="testAIControl()">测试LED控制（打开LED1）</button>
+            <div id="test3-result"></div>
+        </div>
+
+        <!-- 测试4：完整流程 -->
+        <div class="test-section">
+            <h3>测试4：一键完整测试</h3>
+            <p>自动执行所有测试步骤</p>
+            <button class="btn-primary" onclick="runAllTests()">运行所有测试</button>
+            <div id="test4-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        function showResult(elementId, message, type = 'info') {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+
+        async function testBasicRoute() {
+            showResult('test1-result', '⏳ 测试中...', 'info');
+            try {
+                const response = await fetch('/api/test');
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('test1-result',
+                        `✅ 测试通过\n\n` +
+                        `API路由: 正常\n` +
+                        `智谱API配置: ${data.zhipuApiConfigured ? '已配置' : '未配置'}\n` +
+                        `时间戳: ${data.timestamp}`,
+                        'success'
+                    );
+                } else {
+                    showResult('test1-result', `❌ 测试失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('test1-result', `❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            showResult('test2-result', '⏳ 登录中...', 'info');
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    authToken = data.token;
+                    showResult('test2-result',
+                        `✅ 登录成功\n\n` +
+                        `用户名: ${data.username}\n` +
+                        `Token: ${data.token.substring(0, 30)}...\n\n` +
+                        `Token已保存，可以继续测试AI对话`,
+                        'success'
+                    );
+                } else {
+                    showResult('test2-result', `❌ 登录失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('test2-result', `❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAIChat() {
+            if (!authToken) {
+                showResult('test3-result', '⚠️ 请先完成测试2获取Token', 'error');
+                return;
+            }
+
+            const message = document.getElementById('testMessage').value;
+            showResult('test3-result', '⏳ 发送AI请求...', 'info');
+
+            try {
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: authToken,
+                        message: message,
+                        conversationHistory: []
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.needsConfirm) {
+                        showResult('test3-result',
+                            `✅ AI识别到硬件控制请求\n\n` +
+                            `建议操作: ${data.action}\n` +
+                            `函数名: ${data.functionName}\n` +
+                            `参数: ${JSON.stringify(data.functionArgs, null, 2)}\n\n` +
+                            `（这是正常的，需要用户确认）`,
+                            'success'
+                        );
+                    } else {
+                        showResult('test3-result',
+                            `✅ AI响应成功\n\n` +
+                            `AI回复:\n${data.response}`,
+                            'success'
+                        );
+                    }
+                } else {
+                    showResult('test3-result', `❌ AI请求失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('test3-result', `❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAIControl() {
+            if (!authToken) {
+                showResult('test3-result', '⚠️ 请先完成测试2获取Token', 'error');
+                return;
+            }
+
+            showResult('test3-result', '⏳ 测试LED控制指令...', 'info');
+
+            try {
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: authToken,
+                        message: '帮我打开LED1',
+                        conversationHistory: []
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.needsConfirm) {
+                    showResult('test3-result',
+                        `✅ Function Calling测试通过\n\n` +
+                        `AI识别意图: ${data.action}\n` +
+                        `函数名: ${data.functionName}\n` +
+                        `参数: ${JSON.stringify(data.functionArgs, null, 2)}\n\n` +
+                        `说明: AI成功识别了LED控制意图`,
+                        'success'
+                    );
+                } else if (data.success) {
+                    showResult('test3-result',
+                        `⚠️ AI响应了但未触发Function Calling\n\n` +
+                        `AI回复: ${data.response}`,
+                        'error'
+                    );
+                } else {
+                    showResult('test3-result', `❌ 请求失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('test3-result', `❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function runAllTests() {
+            const resultDiv = document.getElementById('test4-result');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '⏳ 开始完整测试流程...\n';
+
+            const log = (msg) => {
+                resultDiv.textContent += msg + '\n';
+            };
+
+            // 测试1
+            log('\n【测试1】基础路由测试...');
+            try {
+                const res1 = await fetch('/api/test');
+                const data1 = await res1.json();
+                if (data1.success) {
+                    log('✅ 基础路由正常');
+                    log(`   智谱API配置: ${data1.zhipuApiConfigured ? '已配置' : '未配置'}`);
+                } else {
+                    log('❌ 基础路由异常');
+                    return;
+                }
+            } catch (e) {
+                log(`❌ 基础路由失败: ${e.message}`);
+                return;
+            }
+
+            // 测试2
+            log('\n【测试2】用户登录...');
+            try {
+                const res2 = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'water', password: '123456' })
+                });
+                const data2 = await res2.json();
+                if (data2.success) {
+                    authToken = data2.token;
+                    log(`✅ 登录成功 (用户: ${data2.username})`);
+                } else {
+                    log(`❌ 登录失败: ${data2.message}`);
+                    return;
+                }
+            } catch (e) {
+                log(`❌ 登录异常: ${e.message}`);
+                return;
+            }
+
+            // 测试3
+            log('\n【测试3】AI基础对话...');
+            try {
+                const res3 = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: authToken,
+                        message: '你好',
+                        conversationHistory: []
+                    })
+                });
+                const data3 = await res3.json();
+                if (data3.success) {
+                    log(`✅ AI对话正常`);
+                    log(`   AI回复: ${data3.response?.substring(0, 50) || '(需确认操作)'}...`);
+                } else {
+                    log(`❌ AI对话失败: ${data3.message}`);
+                    return;
+                }
+            } catch (e) {
+                log(`❌ AI对话异常: ${e.message}`);
+                return;
+            }
+
+            // 测试4
+            log('\n【测试4】Function Calling测试...');
+            try {
+                const res4 = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: authToken,
+                        message: '帮我打开LED1',
+                        conversationHistory: []
+                    })
+                });
+                const data4 = await res4.json();
+                if (data4.success && data4.needsConfirm) {
+                    log(`✅ Function Calling正常`);
+                    log(`   识别操作: ${data4.action}`);
+                    log(`   函数名: ${data4.functionName}`);
+                } else if (data4.success) {
+                    log(`⚠️ AI响应但未触发Function Calling`);
+                } else {
+                    log(`❌ Function Calling失败: ${data4.message}`);
+                    return;
+                }
+            } catch (e) {
+                log(`❌ Function Calling异常: ${e.message}`);
+                return;
+            }
+
+            log('\n🎉 所有测试通过！AI助手功能正常。');
+            resultDiv.className = 'result success';
+        }
+    </script>
+</body>
+</html>

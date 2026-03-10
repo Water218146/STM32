@@ -27,7 +27,7 @@ void Rcc_Init(void)
 //    RCC_HCLKConfig(RCC_SYSCLK_Div1);  // HCLK = SYSCLK
 //    RCC_PCLKConfig(RCC_HCLK_Div1);    // PCLK = HCLK
 
-    /* ========== 原 HSE 外部时钟配置（已注释） ========== */
+    /* ========== 原 HSE 外部时钟配置 ========== */
     
     ErrorStatus HSEStartUpStatus;
     

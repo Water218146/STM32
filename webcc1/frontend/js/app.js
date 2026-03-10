@@ -17,6 +17,10 @@ let ledStates = {           // LED状态缓存（6个LED）
 };
 let mcuDevices = new Map(); // MCU设备列表 Map<clientId, {name, serial, lastSeen}>
 
+// AI助手状态
+let aiConversationHistory = [];  // AI对话历史
+let pendingAiAction = null;      // 待确认的AI操作
+
 // MCU控制状态
 let sensorData = {
     temp: null,
@@ -29,8 +33,25 @@ let relayStates = {
 };
 let motorState = null;      // 'FWD' | 'REV' | 'STOP' | null
 
-// 管理员用户列表（需要与服务器保持一致）
-const ADMIN_USERS = ['water', 'testuser'];  // 可根据需要修改
+// 管理员用户列表（从服务器动态获取）
+let ADMIN_USERS = ['water'];  // 默认值，会在初始化时从服务器更新
+
+/**
+ * 从服务器获取管理员列表
+ */
+async function fetchAdminList() {
+    try {
+        const response = await fetch('/api/admins/usernames');
+        const data = await response.json();
+
+        if (data.success && data.admins) {
+            ADMIN_USERS = data.admins;
+            console.log('[管理员系统] 已更新管理员列表:', ADMIN_USERS);
+        }
+    } catch (error) {
+        console.error('[管理员系统] 获取管理员列表失败:', error);
+    }
+}
 
 // ==================== DOM元素引用 ====================
 let elements = {};
@@ -61,6 +82,7 @@ function initElements() {
         modeTabs: document.querySelectorAll('.mode-tab'),
         chatMode: document.getElementById('chatMode'),
         mcuMode: document.getElementById('mcuMode'),
+        aiMode: document.getElementById('aiMode'),
 
         // LED控制
         ledIndicators: {},
@@ -93,7 +115,13 @@ function initElements() {
         pwmSendBtn: document.getElementById('pwmSend'),
 
         // MCU日志
-        mcuLog: document.getElementById('mcuLog')
+        mcuLog: document.getElementById('mcuLog'),
+
+        // AI助手
+        aiChatContainer: document.getElementById('aiChatContainer'),
+        aiInput: document.getElementById('aiInput'),
+        aiSendBtn: document.getElementById('aiSendBtn'),
+        aiModelSelect: document.getElementById('aiModelSelect')
     };
 
     // 初始化LED指示器引用（6个LED）
@@ -206,7 +234,8 @@ function onOpen() {
  * @param {MessageEvent} event - 消息事件
  */
 function onMessage(event) {
-    const rawData = event.data;
+    // 去除换行符（防止粘包分隔符干扰）
+    const rawData = event.data.trim();
 
     try {
         // 尝试解析为JSON
@@ -277,10 +306,20 @@ function onMessage(event) {
             return;
         }
 
-        // ==================== 特殊处理：MCU数据 ====================
-        // 检测MCU传感器/控制数据格式: TEMP:25.3, HUMID:60.5, RELAY1:ON, MOTOR:FWD 等
+        // 提取发送者和消息（格式：username:message）
+        let from = null;
+        let message = rawData;
+
         if (rawData.includes(':')) {
             const parts = rawData.split(':');
+            from = parts[0];
+            message = parts.slice(1).join(':');
+        }
+
+        // ==================== 特殊处理：MCU数据 ====================
+        // 检测MCU传感器/控制数据格式: TEMP:25.3, HUMID:60.5, RELAY1:ON, MOTOR:FWD, VOLTAGE:3.30 等
+        if (message.includes(':')) {
+            const parts = message.split(':');
             const type = parts[0];
 
             // 传感器数据类型
@@ -292,19 +331,10 @@ function onMessage(event) {
 
             if (sensorTypes.includes(type) || isRelay || isMotor) {
                 // MCU数据，调用处理函数
-                handleMcuData(rawData);
+                console.log('[传感器数据] 收到:', message, '来自:', from);
+                handleMcuData(message);
                 return;  // 不显示在聊天界面
             }
-        }
-
-        // 提取发送者和消息（格式：username:message）
-        let from = null;
-        let message = rawData;
-
-        if (rawData.includes(':')) {
-            const parts = rawData.split(':');
-            from = parts[0];
-            message = parts.slice(1).join(':');
         }
 
         // 判断是LED消息还是聊天消息
@@ -713,7 +743,7 @@ function handleMcuData(message) {
 
 /**
  * 切换模式
- * @param {string} mode - 模式名称 'chat' | 'mcu'
+ * @param {string} mode - 模式名称 'chat' | 'mcu' | 'ai'
  */
 function switchMode(mode) {
     currentMode = mode;
@@ -731,11 +761,17 @@ function switchMode(mode) {
     if (mode === 'chat') {
         elements.chatMode.classList.add('active');
         elements.mcuMode.classList.remove('active');
+        if (elements.aiMode) elements.aiMode.classList.remove('active');
     } else if (mode === 'mcu') {
         elements.chatMode.classList.remove('active');
         elements.mcuMode.classList.add('active');
+        if (elements.aiMode) elements.aiMode.classList.remove('active');
 
         // MCU模式下，传感器数据和LED状态由MCU主动上报，无需主动刷新
+    } else if (mode === 'ai') {
+        elements.chatMode.classList.remove('active');
+        elements.mcuMode.classList.remove('active');
+        if (elements.aiMode) elements.aiMode.classList.add('active');
     }
 }
 
@@ -1079,6 +1115,312 @@ setInterval(() => {
     }
 }, 10000); // 每10秒检查一次
 
+// ==================== AI助手功能 ====================
+
+/**
+ * 发送AI消息
+ */
+async function sendAiMessage() {
+    if (!elements.aiInput) return;
+
+    const message = elements.aiInput.value.trim();
+    if (!message) return;
+
+    // 获取选择的模型（默认改为GLM-4-Flash）
+    const selectedModel = elements.aiModelSelect ? elements.aiModelSelect.value : 'GLM-4-Flash';
+
+    addAiMessage(message, 'user');
+    elements.aiInput.value = '';
+    addAiMessage('正在思考...', 'loading');
+
+    try {
+        const token = localStorage.getItem('authToken');
+        console.log('[AI] 发送请求:', { message, model: selectedModel, token: token ? '已配置' : '未配置' });
+
+        const response = await fetch('/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: token,
+                message: message,
+                model: selectedModel,
+                conversationHistory: aiConversationHistory
+            })
+        });
+
+        console.log('[AI] 收到响应:', response.status, response.statusText);
+        const data = await response.json();
+        console.log('[AI] 响应数据:', data);
+        removeLoadingMessage();
+
+        if (!data.success) {
+            addAiMessage(`错误: ${data.message}`, 'error');
+            console.error('[AI] 服务器返回错误:', data.message);
+            return;
+        }
+
+        aiConversationHistory.push({ role: 'user', content: message });
+
+        // ==================== 如果有控制卡片，先展示卡片 ====================
+        // 支持单个卡片或多个卡片
+        if (data.controlCards && Array.isArray(data.controlCards)) {
+            // 多个卡片：循环显示所有卡片
+            for (const card of data.controlCards) {
+                // 如果是查询状态卡片，注入真实的设备状态
+                if (card.type === '状态查询') {
+                    card.data = getCurrentDeviceStates();
+                }
+                addControlCard(card);
+            }
+        } else if (data.controlCard) {
+            // 单个卡片
+            if (data.controlCard.type === '状态查询') {
+                data.controlCard.data = getCurrentDeviceStates();
+            }
+            addControlCard(data.controlCard);
+        }
+
+        // 显示AI回复（查询状态时不显示冗余的文本描述）
+        if (data.controlCard && data.controlCard.type === '状态查询') {
+            // 查询状态时不显示文本，卡片已经包含所有信息
+            aiConversationHistory.push({ role: 'assistant', content: '已查询设备状态' });
+        } else {
+            addAiMessage(data.response, 'assistant');
+            aiConversationHistory.push({ role: 'assistant', content: data.response });
+        }
+
+    } catch (error) {
+        console.error('[AI] 请求失败:', error);
+        removeLoadingMessage();
+        addAiMessage(`网络错误: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * 获取当前设备的真实状态（从前端缓存读取）
+ */
+function getCurrentDeviceStates() {
+    return {
+        led: {
+            LED1: ledStates[1] === null ? 'unknown' : (ledStates[1] ? 'on' : 'off'),
+            LED2: ledStates[2] === null ? 'unknown' : (ledStates[2] ? 'on' : 'off'),
+            LED3: ledStates[3] === null ? 'unknown' : (ledStates[3] ? 'on' : 'off'),
+            LED4: ledStates[4] === null ? 'unknown' : (ledStates[4] ? 'on' : 'off'),
+            LED5: ledStates[5] === null ? 'unknown' : (ledStates[5] ? 'on' : 'off'),
+            LED6: ledStates[6] === null ? 'unknown' : (ledStates[6] ? 'on' : 'off')
+        },
+        relay: {
+            RELAY1: relayStates[1] === null ? 'unknown' : (relayStates[1] ? 'on' : 'off'),
+            RELAY2: relayStates[2] === null ? 'unknown' : (relayStates[2] ? 'on' : 'off'),
+            RELAY3: relayStates[3] === null ? 'unknown' : (relayStates[3] ? 'on' : 'off')
+        },
+        motor: {
+            status: motorState || 'unknown'
+        },
+        sensor: {
+            TEMP: elements.tempValue ? elements.tempValue.textContent : 'unknown',
+            HUMID: elements.humidValue ? elements.humidValue.textContent : 'unknown',
+            LIGHT: elements.lightValue ? elements.lightValue.textContent : 'unknown',
+            VOLTAGE: elements.voltageValue ? elements.voltageValue.textContent : 'unknown'
+        }
+    };
+}
+
+/**
+ * 执行AI操作
+ */
+async function executeAiAction() {
+    if (!pendingAiAction) return;
+
+    addAiMessage('正在执行...', 'loading');
+
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/ai/execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: token,
+                ...pendingAiAction
+            })
+        });
+
+        const data = await response.json();
+        removeLoadingMessage();
+
+        if (data.success) {
+            addAiMessage(`✅ ${data.response}`, 'assistant');
+            aiConversationHistory.push({ role: 'assistant', content: data.response });
+        } else {
+            addAiMessage(`❌ ${data.message}`, 'error');
+        }
+    } catch (error) {
+        removeLoadingMessage();
+        addAiMessage('执行失败', 'error');
+    }
+
+    pendingAiAction = null;
+}
+
+/**
+ * 检查用户回复是否为确认（在对话中确认）
+ * @param {string} message - 用户输入的消息
+ * @returns {boolean} 是否为确认
+ */
+function isConfirmResponse(message) {
+    const msg = message.trim().toLowerCase();
+    return msg === '是' || msg === 'yes' || msg === 'y' || msg === '确认' || msg === '好的' || msg === '好';
+}
+
+/**
+ * 检查用户回复是否为拒绝
+ * @param {string} message - 用户输入的消息
+ * @returns {boolean} 是否为拒绝
+ */
+function isDenyResponse(message) {
+    const msg = message.trim().toLowerCase();
+    return msg === '否' || msg === 'no' || msg === 'n' || msg === '取消' || msg === '不';
+}
+
+/**
+ * 添加AI消息
+ * @param {string} content - 消息内容
+ * @param {string} type - 消息类型 'user' | 'assistant' | 'loading' | 'error' | 'system'
+ */
+function addAiMessage(content, type) {
+    if (!elements.aiChatContainer) return;
+
+    const welcomeMsg = elements.aiChatContainer.querySelector('.ai-welcome-message');
+    if (welcomeMsg) welcomeMsg.remove();
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `ai-message ai-message-${type}`;
+    if (type === 'loading') messageDiv.id = 'ai-loading-message';
+    messageDiv.textContent = content;
+    elements.aiChatContainer.appendChild(messageDiv);
+    elements.aiChatContainer.scrollTop = elements.aiChatContainer.scrollHeight;
+}
+
+/**
+ * 移除加载消息
+ */
+function removeLoadingMessage() {
+    const loadingMsg = document.getElementById('ai-loading-message');
+    if (loadingMsg) loadingMsg.remove();
+}
+
+/**
+ * 添加控制卡片到AI聊天界面
+ * @param {Object} card - 控制卡片对象
+ */
+function addControlCard(card) {
+    if (!elements.aiChatContainer) return;
+
+    const statusIcon = card.status === 'success' ? '✅' : '❌';
+
+    // 根据卡片类型选择不同的展示方式
+    let cardHtml = '';
+
+    if (card.type === '状态查询') {
+        // 状态查询卡片 - 紧凑表格布局
+        cardHtml = `
+            <div class="status-query-card">
+                <div class="card-title">
+                    <span>${card.icon} ${card.type}</span>
+                    <span>${statusIcon}</span>
+                </div>
+                ${card.data ? formatCardData(card.data) : ''}
+            </div>
+        `;
+    } else {
+        // 控制卡片 - 极简单行
+        cardHtml = `
+            <div class="control-mini-card">
+                <span class="mini-icon">${card.icon}</span>
+                <span class="mini-text">${card.device} ${card.action}</span>
+                <span class="mini-status">${statusIcon}</span>
+            </div>
+        `;
+    }
+
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'ai-message control-card-wrapper';
+    cardDiv.innerHTML = cardHtml;
+
+    elements.aiChatContainer.appendChild(cardDiv);
+    elements.aiChatContainer.scrollTop = elements.aiChatContainer.scrollHeight;
+}
+
+/**
+ * 格式化卡片数据（用于状态查询） - 紧凑网格布局
+ * @param {Object} data - 设备状态数据
+ * @returns {string} 格式化后的HTML
+ */
+function formatCardData(data) {
+    if (typeof data !== 'object') return String(data);
+
+    let html = '<div class="status-grid">';
+
+    // LED状态 - 紧凑单行展示
+    if (data.led) {
+        const ledItems = Object.entries(data.led).map(([device, status]) => {
+            const num = device.replace('LED', '');
+            const icon = status === 'on' ? '🟢' : (status === 'off' ? '⚫' : '❓');
+            return `<span class="s-item">${icon} L${num}</span>`;
+        }).join('');
+        html += `<div class="s-row"><span class="s-label">💡</span>${ledItems}</div>`;
+    }
+
+    // 继电器状态 - 紧凑单行展示
+    if (data.relay) {
+        const relayItems = Object.entries(data.relay).map(([device, status]) => {
+            const num = device.replace('RELAY', '');
+            const icon = status === 'on' ? '🟢' : (status === 'off' ? '⚫' : '❓');
+            return `<span class="s-item">${icon} R${num}</span>`;
+        }).join('');
+        html += `<div class="s-row"><span class="s-label">🔌</span>${relayItems}</div>`;
+    }
+
+    // 电机状态 - 单行展示
+    if (data.motor) {
+        const motorIcon = data.motor.status === 'FWD' ? '⏩' : (data.motor.status === 'REV' ? '⏪' : '⏹️');
+        const motorText = data.motor.status === 'FWD' ? '正转' : (data.motor.status === 'REV' ? '反转' : (data.motor.status === 'STOP' ? '停止' : '未知'));
+        html += `<div class="s-row"><span class="s-label">⚙️</span><span class="s-item">${motorIcon} ${motorText}</span></div>`;
+    }
+
+    // 传感器数据 - 紧凑网格展示（2列）
+    if (data.sensor) {
+        const sensorMap = {
+            TEMP: ['🌡️', '℃'],
+            HUMID: ['💧', '%'],
+            LIGHT: ['☀️', 'lux'],
+            VOLTAGE: ['⚡', 'V']
+        };
+        const sensorItems = Object.entries(data.sensor)
+            .filter(([_, value]) => value !== 'unknown' && value !== '--')
+            .map(([sensor, value]) => {
+                const [icon, unit] = sensorMap[sensor] || ['📊', ''];
+                return `<span class="s-item">${icon} ${value}${unit}</span>`;
+            }).join('');
+        if (sensorItems) {
+            html += `<div class="s-row"><span class="s-label">📊</span>${sensorItems}</div>`;
+        }
+    }
+
+    html += '</div>';
+    return html;
+}
+
+/**
+ * 格式化时间戳
+ * @param {number} timestamp - 时间戳
+ * @returns {string} 格式化后的时间字符串
+ */
+function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('zh-CN');
+}
+
 // ==================== 事件监听器 ====================
 
 /**
@@ -1197,6 +1539,19 @@ function initEventListeners() {
         elements.logoutBtn.addEventListener('click', logout);
     }
 
+    // ==================== AI助手事件绑定 ====================
+    if (elements.aiSendBtn) {
+        elements.aiSendBtn.addEventListener('click', sendAiMessage);
+    }
+    if (elements.aiInput) {
+        elements.aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAiMessage();
+            }
+        });
+    }
+
     // 页面卸载时关闭连接
     window.addEventListener('beforeunload', () => {
         if (ws && isConnected) {
@@ -1229,7 +1584,7 @@ function checkLoginStatus() {
 /**
  * 页面加载完成后初始化
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('[系统] WebCC1 终端管理系统已启动');
 
     // 初始化DOM元素引用
@@ -1248,6 +1603,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (username) {
         elements.usernameDisplay.textContent = username;
     }
+
+    // 从服务器获取管理员列表（动态同步）
+    await fetchAdminList();
 
     // 初始化事件监听器
     initEventListeners();

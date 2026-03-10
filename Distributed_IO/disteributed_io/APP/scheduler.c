@@ -13,8 +13,11 @@ typedef struct
 
 // 静态任务数组，每个任务包含任务函数、执行周期（毫秒）和上次运行时间（毫秒）
 static task_t scheduler_task[] = {
-    {0,1,0},
-
+    {led_task,1,0},
+		{input_task,1,0},
+		{rs485_task,10,0},
+		{adc_task,10,0},
+		{dac_task,1,0},
 };
 
 //调度器初始化函数

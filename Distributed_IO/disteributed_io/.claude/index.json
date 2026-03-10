@@ -1,0 +1,162 @@
+{
+  "timestamp": "2026-01-30T14:55:23+08:00",
+  "project_name": "Distributed_IO",
+  "description": "STM32F051 嵌入式分布式I/O控制系统",
+  "root_path": "D:\\AAAWaterCode\\Distributed_IO\\disteributed_io",
+  "scan_coverage": {
+    "total_files_estimated": 150,
+    "files_scanned": 45,
+    "coverage_percent": 75
+  },
+  "modules": [
+    {
+      "name": "APP",
+      "path": "APP/",
+      "relative_path": "APP",
+      "responsibility": "应用层业务逻辑实现",
+      "language": "C",
+      "entry_files": [
+        "scheduler.c",
+        "led_app.c",
+        "input_app.c",
+        "uart_app.c"
+      ],
+      "header_files": [
+        "scheduler.h",
+        "led_app.h",
+        "input_app.h",
+        "uart_app.h",
+        "mydefine.h"
+      ],
+      "has_tests": false,
+      "has_config": false,
+      "coverage": 100
+    },
+    {
+      "name": "Hardware",
+      "path": "Hardware/",
+      "relative_path": "Hardware",
+      "responsibility": "硬件抽象层，封装STM32外设驱动",
+      "language": "C",
+      "entry_files": [
+        "hardware.c",
+        "hardware_GPIO.c",
+        "hardware_RCC.c",
+        "hardware_NVIC.c",
+        "hardware_uart.c"
+      ],
+      "header_files": [
+        "hardware.h",
+        "hardware_GPIO.h",
+        "hardware_RCC.h",
+        "hardware_NVIC.h",
+        "hardware_uart.h"
+      ],
+      "has_tests": false,
+      "has_config": false,
+      "coverage": 100
+    },
+    {
+      "name": "User",
+      "path": "User/",
+      "relative_path": "User",
+      "responsibility": "主程序和中断服务函数",
+      "language": "C",
+      "entry_files": [
+        "main.c",
+        "stm32f0xx_it.c"
+      ],
+      "header_files": [
+        "main.h",
+        "stm32f0xx_conf.h",
+        "stm32f0xx_it.h"
+      ],
+      "has_tests": false,
+      "has_config": true,
+      "coverage": 100
+    },
+    {
+      "name": "docs",
+      "path": "docs/",
+      "relative_path": "docs",
+      "responsibility": "项目文档和学习笔记",
+      "language": "Markdown",
+      "files": [
+        "USART中断机制详解.md",
+        "堆栈详解.md",
+        "串口接收机制学习笔记-从困惑到理解.md"
+      ],
+      "coverage": 100
+    },
+    {
+      "name": "MDK-ARM",
+      "path": "MDK-ARM/",
+      "relative_path": "MDK-ARM",
+      "responsibility": "Keil MDK-ARM项目配置和编译输出",
+      "language": "-",
+      "entry_files": [
+        "Project.uvprojx"
+      ],
+      "has_tests": false,
+      "has_config": true,
+      "coverage": 20
+    }
+  ],
+  "ignore_patterns": [
+    "node_modules/**",
+    ".git/**",
+    ".github/**",
+    "dist/**",
+    "build/**",
+    ".next/**",
+    "__pycache__/**",
+    "*.lock",
+    "*.log",
+    "*.bin",
+    "*.pdf",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.mp4",
+    "*.zip",
+    "*.tar",
+    "*.gz",
+    "MDK-ARM/STM32F051/*.crf",
+    "MDK-ARM/STM32F051/*.d",
+    "MDK-ARM/STM32F051/*.o",
+    "MDK-ARM/STM32F051/*.axf",
+    "MDK-ARM/STM32F051/*.htm",
+    "MDK-ARM/STM32F051/*.lnp",
+    "MDK-ARM/STM32F051/*.map",
+    "MDK-ARM/STM32F051/build_log.htm",
+    "MDK-ARM/*.uvguix.*",
+    "MDK-ARM/*.bak"
+  ],
+  "gaps": [
+    {
+      "module": "MDK-ARM",
+      "missing": "编译配置详细信息、启动文件分析"
+    },
+    {
+      "module": "CMSIS",
+      "missing": "系统初始化代码、启动汇编文件"
+    },
+    {
+      "module": "Libraries",
+      "missing": "标准外设库详细分析"
+    }
+  ],
+  "next_steps": [
+    "扫描 CMSIS 启动文件和系统初始化",
+    "分析 Keil 项目配置文件",
+    "完善测试策略文档",
+    "添加 UART IDLE 中断机制实现"
+  ],
+  "truncated": false,
+  "notes": [
+    "项目使用中文注释，可能存在编码问题",
+    "标准外设库代码量较大，只扫描了关键部分",
+    "编译输出文件已忽略"
+  ]
+}

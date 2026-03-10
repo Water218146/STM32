@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I2C通信协议完整教程 - 单页面交互式学习</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        /* 顶部标题 */
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* 时序图区域（固定在顶部） */
+        .timing-section {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            border-bottom: 3px solid #667eea;
+            padding: 20px;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .timing-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        #timingCanvas {
+            display: block;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: crosshair;
+        }
+
+        /* 主内容区：左右布局 */
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        /* 左侧状态面板 */
+        .left-panel {
+            width: 30%;
+            background: #f8f9fa;
+            padding: 30px 20px;
+            border-right: 2px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .status-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .status-panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .status-panel h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .status-row:hover {
+            background: #e9ecef;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .status-value {
+            font-family: 'Courier New', monospace;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        /* 寄存器显示 */
+        .register {
+            display: flex;
+            gap: 4px;
+            margin-top: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .register-bit {
+            width: 32px;
+            height: 32px;
+            background: #e9ecef;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .register-bit.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.15);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .register-bit.current {
+            background: #ffc107;
+            color: #000;
+            border-color: #ffc107;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* 右侧讲解区 */
+        .right-panel {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            max-height: calc(100vh - 400px);
+        }
+
+        .step-content {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-title {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .step-section {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .step-section ul, .step-section ol {
+            margin-left: 25px;
+            line-height: 1.8;
+            color: #495057;
+        }
+
+        .step-section li {
+            margin: 8px 0;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-block .comment {
+            color: #90cdf4;
+        }
+
+        .code-block .keyword {
+            color: #fc8181;
+        }
+
+        .code-block .function {
+            color: #68d391;
+        }
+
+        /* 控制按钮区 */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 50px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .step-indicator {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border-radius: 20px;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            z-index: 10000;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                width: 100%;
+                border-right: none;
+                border-bottom: 2px solid #e0e0e0;
+            }
+
+            .right-panel {
+                max-height: none;
+            }
+        }
+
+        /* 高亮提示 */
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .highlight strong {
+            color: #856404;
+        }
+
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="container">
+        <header>
+            <h1>📡 I2C通信协议完整教程</h1>
+            <p>单页面交互式学习 - 主从双视角深度解析</p>
+        </header>
+
+        <!-- 时序图区域 -->
+        <div class="timing-section">
+            <h3>⏱️ I2C 完整时序图（实时高亮当前步骤）</h3>
+            <canvas id="timingCanvas" width="1500" height="200"></canvas>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 左侧状态面板 -->
+            <div class="left-panel">
+                <!-- 主机状态 -->
+                <div class="status-panel">
+                    <h4>🎛️ 主机状态</h4>
+                    <div class="status-row">
+                        <span class="status-label">状态机:</span>
+                        <span class="status-value" id="masterState">IDLE</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">SCL输出:</span>
+                        <span class="status-value" id="masterSCL">高电平</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">SDA输出:</span>
+                        <span class="status-value" id="masterSDA">高电平</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>发送寄存器:</strong>
+                        <div class="register" id="masterRegister"></div>
+                    </div>
+                </div>
+
+                <!-- 从机状态 -->
+                <div class="status-panel">
+                    <h4>🎛️ 从机状态</h4>
+                    <div class="status-row">
+                        <span class="status-label">状态机:</span>
+                        <span class="status-value" id="slaveState">IDLE</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">地址匹配:</span>
+                        <span class="status-value" id="addrMatch">等待</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">ACK状态:</span>
+                        <span class="status-value" id="ackStatus">等待</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>接收寄存器:</strong>
+                        <div class="register" id="slaveRegister"></div>
+                    </div>
+                </div>
+
+                <!-- 快捷键提示 -->
+                <div class="status-panel">
+                    <h4>⌨️ 快捷键</h4>
+                    <div class="status-row">
+                        <span class="status-label">←/→</span>
+                        <span class="status-value">上/下一步</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">空格</span>
+                        <span class="status-value">播放/暂停</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">R</span>
+                        <span class="status-value">重置</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧讲解区 -->
+            <div class="right-panel" id="contentPanel">
+                <!-- 动态内容将在这里显示 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 控制按钮 -->
+    <div class="controls">
+        <button class="control-btn" onclick="resetStep()">⏮️ 重置</button>
+        <button class="control-btn" onclick="prevStep()">⏪ 上一步</button>
+        <button class="control-btn" onclick="togglePlay()" id="playBtn">⏯️ 播放</button>
+        <span class="step-indicator" id="stepIndicator">步骤 0/21</span>
+        <button class="control-btn" onclick="nextStep()">⏩ 下一步</button>
+    </div>
+
+    <script>
+        // ========== 全局状态管理 ==========
+        let currentStep = 0;
+        const totalSteps = 21;
+        let isPlaying = false;
+        let playInterval = null;
+
+        // I2C数据配置
+        const ADDRESS = 0b01010000; // 7位地址 + R/W位
+        const DATA = 0b11001010;
+
+        // ========== 步骤内容定义 ==========
+        const stepContents = [
+            {
+                // 步骤0：空闲状态
+                title: "步骤0：空闲状态",
+                master: { state: "IDLE", scl: "高电平", sda: "高电平（释放）", register: [] },
+                slave: { state: "IDLE", addrMatch: "等待", ack: "等待", register: [] },
+                content: `
+                    <div class="step-section">
+                        <h3>⏱️ 时序说明</h3>
+                        <ul>
+                            <li><strong>SCL状态：</strong>高电平（空闲）</li>
+                            <li><strong>SDA状态：</strong>高电平（空闲）</li>
+                            <li><strong>总线状态：</strong>空闲，等待START条件</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📤 主机操作</h3>
+                        <ul>
+                            <li>主机处于空闲状态，未驱动总线</li>
+                            <li>SCL和SDA引脚配置为<strong>开漏输出</strong></li>
+                            <li>输出高阻态，由上拉电阻拉高到VDD</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📥 从机操作</h3>
+                        <ul>
+                            <li>从机监听总线，等待START条件</li>
+                            <li>同样采用开漏输出配置</li>
+                            <li>处于低功耗状态</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>💡 原理解析：开漏输出与上拉电阻</h3>
+                        <div class="highlight">
+                            <strong>为什么I2C使用开漏输出？</strong>
+                            <ul>
+                                <li><strong>线与逻辑：</strong>任何设备拉低信号线，整个总线都变为低电平</li>
+                                <li><strong>多主机支持：</strong>允许多个主机共享同一总线</li>
+                                <li><strong>电平兼容：</strong>不同电压设备可通过上拉电阻连接</li>
+                            </ul>
+                        </div>
+                        <table>
+                            <tr>
+                                <th>主机输出</th>
+                                <th>从机输出</th>
+                                <th>总线电平</th>
+                            </tr>
+                            <tr>
+                                <td>高阻（释放）</td>
+                                <td>高阻（释放）</td>
+                                <td>高（上拉电阻拉高）</td>
+                            </tr>
+                            <tr>
+                                <td>低（拉低）</td>
+                                <td>高阻（释放）</td>
+                                <td>低</td>
+                            </tr>
+                            <tr>
+                                <td>高阻（释放）</td>
+                                <td>低（拉低）</td>
+                                <td>低</td>
+                            </tr>
+                            <tr>
+                                <td>低（拉低）</td>
+                                <td>低（拉低）</td>
+                                <td>低</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📝 代码示例</h3>
+                        <div class="code-block">
+<span class="comment">// STM32 标准库配置开漏输出</span>
+GPIO_InitTypeDef GPIO_InitStructure;
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7; <span class="comment">// PB6=SCL, PB7=SDA</span>
+GPIO_InitStructure.GPIO_Mode = <span class="keyword">GPIO_Mode_AF_OD</span>; <span class="comment">// 开漏输出</span>
+GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+<span class="function">GPIO_Init</span>(GPIOB, &GPIO_InitStructure);
+
+<span class="comment">// 上拉电阻典型值：4.7kΩ（标准模式）或 2.2kΩ（快速模式）</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                // 步骤1：START条件
+                title: "步骤1：START 条件",
+                master: { state: "发送START", scl: "高电平", sda: "高→低", register: [] },
+                slave: { state: "检测START", addrMatch: "等待", ack: "等待", register: [] },
+                content: `
+                    <div class="step-section">
+                        <h3>⏱️ 时序说明</h3>
+                        <ul>
+                            <li><strong>关键时序：</strong>SCL为高时，SDA从高变低</li>
+                            <li><strong>时序约束：</strong>t<sub>HD;STA</sub> ≥ 4.0μs（标准模式）</li>
+                            <li><strong>作用：</strong>标志一次I2C传输的开始</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📤 主机操作</h3>
+                        <ol>
+                            <li>确保SCL和SDA都为高（空闲状态）</li>
+                            <li>保持SCL为高</li>
+                            <li>拉低SDA（产生下降沿）</li>
+                            <li>等待t<sub>HD;STA</sub>时间</li>
+                            <li>拉低SCL，准备发送数据</li>
+                        </ol>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📥 从机操作</h3>
+                        <ul>
+                            <li>持续监测SDA线</li>
+                            <li>检测到SCL=高且SDA下降沿时，识别为START条件</li>
+                            <li>从IDLE状态切换到RECEIVING状态</li>
+                            <li>准备接收地址字节</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>💡 原理解析</h3>
+                        <div class="highlight">
+                            <strong>为什么START条件定义为"SCL高时SDA下降"？</strong>
+                            <ul>
+                                <li><strong>唯一性：</strong>数据传输时，SDA只能在SCL低时变化，START条件是唯一例外</li>
+                                <li><strong>可靠性：</strong>从机可明确区分START和普通数据位</li>
+                                <li><strong>抗干扰：</strong>避免噪声误触发通信</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📝 代码示例</h3>
+                        <div class="code-block">
+<span class="comment">// 标准库发送START条件</span>
+<span class="keyword">void</span> <span class="function">I2C_GenerateSTART</span>(I2C_TypeDef* I2Cx, FunctionalState NewState) {
+    <span class="keyword">if</span> (NewState != DISABLE) {
+        I2Cx->CR1 |= I2C_CR1_START; <span class="comment">// 设置START位</span>
+    }
+}
+
+<span class="comment">// 手动实现START条件（GPIO模拟）</span>
+<span class="keyword">void</span> <span class="function">I2C_Start</span>(<span class="keyword">void</span>) {
+    SDA_HIGH(); <span class="comment">// 确保SDA为高</span>
+    SCL_HIGH(); <span class="comment">// 确保SCL为高</span>
+    <span class="function">delay_us</span>(5);
+    SDA_LOW();  <span class="comment">// 在SCL高时拉低SDA -> START</span>
+    <span class="function">delay_us</span>(5);
+    SCL_LOW();  <span class="comment">// 拉低SCL，准备发送数据</span>
+}
+                        </div>
+                    </div>
+                `
+            },
+            // 步骤2-9：发送地址字节每一位
+            ...Array.from({length: 8}, (_, i) => ({
+                title: `步骤${i+2}：发送地址位${7-i}`,
+                master: {
+                    state: "发送地址",
+                    scl: i % 2 === 0 ? "低→高" : "高→低",
+                    sda: (ADDRESS >> (7-i)) & 1 ? "高电平" : "低电平",
+                    register: Array.from({length: 8}, (_, j) =>
+                        j < i ? ((ADDRESS >> (7-j)) & 1).toString() : 'x'
+                    ),
+                    currentBit: i
+                },
+                slave: {
+                    state: "接收地址",
+                    addrMatch: i === 7 ? "匹配中..." : "接收中",
+                    ack: "等待",
+                    register: Array.from({length: 8}, (_, j) =>
+                        j < i ? ((ADDRESS >> (7-j)) & 1).toString() : 'x'
+                    ),
+                    currentBit: i
+                },
+                content: `
+                    <div class="step-section">
+                        <h3>⏱️ 时序说明</h3>
+                        <ul>
+                            <li><strong>当前位：</strong>地址位${7-i} = ${(ADDRESS >> (7-i)) & 1}</li>
+                            <li><strong>SCL状态：</strong>${i % 2 === 0 ? '低电平（数据变化期）' : '高电平（数据采样期）'}</li>
+                            <li><strong>SDA状态：</strong>${(ADDRESS >> (7-i)) & 1 ? '高电平' : '低电平'}</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📤 主机操作</h3>
+                        <ol>
+                            <li><strong>SCL低时：</strong>将位${7-i}的值 (${(ADDRESS >> (7-i)) & 1}) 输出到SDA</li>
+                            <li><strong>等待建立时间：</strong>t<sub>SU;DAT</sub> ≥ 250ns</li>
+                            <li><strong>拉高SCL：</strong>保持数据稳定</li>
+                            <li><strong>SCL高时：</strong>数据有效，从机采样</li>
+                            <li><strong>移位寄存器：</strong>左移一位，准备下一位</li>
+                        </ol>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📥 从机操作</h3>
+                        <ul>
+                            <li><strong>SCL上升沿：</strong>采样SDA，读取位${7-i}</li>
+                            <li><strong>存入寄存器：</strong>将采样值移入接收移位寄存器</li>
+                            <li><strong>位计数：</strong>已接收 ${i+1}/8 位</li>
+                            ${i === 7 ? '<li><strong>地址检查：</strong>完成8位接收，开始地址匹配</li>' : ''}
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>⚙️ 寄存器变化</h3>
+                        <div class="highlight">
+                            <strong>【主机发送移位寄存器】</strong><br>
+                            地址字节: 0x${ADDRESS.toString(16).toUpperCase()} = 0b${ADDRESS.toString(2).padStart(8, '0')}<br>
+                            发送顺序: MSB先发（位7 → 位0）<br><br>
+                            当前状态: [${Array.from({length: 8}, (_, j) =>
+                                j < i ? ((ADDRESS >> (7-j)) & 1) :
+                                j === i ? `<span style="color: #ffc107; font-weight: bold;">${(ADDRESS >> (7-i)) & 1}</span>` : 'x'
+                            ).join('][')}]<br>
+                            ${i < 7 ? `下一位: 位${6-i} = ${(ADDRESS >> (6-i)) & 1}` : '地址发送完成'}
+                        </div>
+                    </div>
+
+                    ${i === 7 ? `
+                    <div class="step-section">
+                        <h3>💡 地址字节解析</h3>
+                        <table>
+                            <tr>
+                                <th>位7-1</th>
+                                <th>位0</th>
+                                <th>说明</th>
+                            </tr>
+                            <tr>
+                                <td>0b${(ADDRESS >> 1).toString(2).padStart(7, '0')}</td>
+                                <td>${ADDRESS & 1}</td>
+                                <td>7位从机地址 + R/W位</td>
+                            </tr>
+                            <tr>
+                                <td>0x${(ADDRESS >> 1).toString(16).toUpperCase()}</td>
+                                <td>${ADDRESS & 1 ? 'R（读）' : 'W（写）'}</td>
+                                <td>从机地址=${(ADDRESS >> 1)} (十进制)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    ` : ''}
+
+                    <div class="step-section">
+                        <h3>📝 代码示例</h3>
+                        <div class="code-block">
+<span class="comment">// 主机发送一位数据</span>
+<span class="keyword">void</span> <span class="function">I2C_SendBit</span>(<span class="keyword">uint8_t</span> bit) {
+    SCL_LOW();           <span class="comment">// 拉低SCL</span>
+    <span class="keyword">if</span> (bit) {
+        SDA_HIGH();      <span class="comment">// 发送1</span>
+    } <span class="keyword">else</span> {
+        SDA_LOW();       <span class="comment">// 发送0</span>
+    }
+    <span class="function">delay_us</span>(5);      <span class="comment">// 等待数据建立</span>
+    SCL_HIGH();          <span class="comment">// 拉高SCL，从机采样</span>
+    <span class="function">delay_us</span>(5);
+}
+
+<span class="comment">// 从机接收一位数据</span>
+<span class="keyword">uint8_t</span> <span class="function">I2C_ReceiveBit</span>(<span class="keyword">void</span>) {
+    <span class="keyword">uint8_t</span> bit;
+    SDA_HIGH();          <span class="comment">// 释放SDA</span>
+    SCL_HIGH();          <span class="comment">// 拉高SCL</span>
+    <span class="function">delay_us</span>(2);
+    bit = <span class="function">SDA_READ</span>(); <span class="comment">// 在SCL高电平时采样</span>
+    <span class="function">delay_us</span>(3);
+    SCL_LOW();
+    <span class="keyword">return</span> bit;
+}
+                        </div>
+                    </div>
+                `
+            })),
+            {
+                // 步骤10：地址ACK
+                title: "步骤10：地址应答（ACK）",
+                master: { state: "等待ACK", scl: "低→高", sda: "释放→低", register: [] },
+                slave: { state: "发送ACK", addrMatch: "✅ 匹配", ack: "发送ACK", register: [] },
+                content: `
+                    <div class="step-section">
+                        <h3>⏱️ 时序说明</h3>
+                        <ul>
+                            <li><strong>时钟周期：</strong>第9个时钟周期</li>
+                            <li><strong>SCL状态：</strong>由主机控制（低→高→低）</li>
+                            <li><strong>SDA状态：</strong>由从机控制（拉低=ACK，保持高=NACK）</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📤 主机操作</h3>
+                        <ol>
+                            <li>发送完8位地址后，释放SDA（高阻态）</li>
+                            <li>拉高SCL，等待从机响应</li>
+                            <li>在SCL高电平时，读取SDA状态</li>
+                            <li>SDA=低 → 收到ACK，继续发送数据</li>
+                            <li>SDA=高 → 收到NACK，发送STOP或重新START</li>
+                        </ol>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📥 从机操作</h3>
+                        <ol>
+                            <li>接收到8位地址后，进行地址匹配</li>
+                            <li>地址匹配 + R/W位正确 → 拉低SDA（发送ACK）</li>
+                            <li>地址不匹配 → 保持高阻态（NACK）</li>
+                            <li>在SCL低时拉低SDA，SCL高时保持</li>
+                            <li>等待主机释放SCL，准备接收/发送数据</li>
+                        </ol>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>💡 原理解析：线与逻辑的应用</h3>
+                        <div class="highlight">
+                            <strong>为什么从机能"拉低"SDA？</strong>
+                            <ul>
+                                <li><strong>开漏输出特性：</strong>主机释放SDA后，总线被上拉电阻拉高</li>
+                                <li><strong>线与逻辑：</strong>从机可以将总线拉低（低电平优先）</li>
+                                <li><strong>ACK检测：</strong>主机读取SDA，低电平表示ACK，高电平表示NACK</li>
+                            </ul>
+                        </div>
+                        <table>
+                            <tr>
+                                <th>主机SDA</th>
+                                <th>从机SDA</th>
+                                <th>总线电平</th>
+                                <th>含义</th>
+                            </tr>
+                            <tr>
+                                <td>高阻（释放）</td>
+                                <td>拉低</td>
+                                <td>低</td>
+                                <td>ACK（应答）</td>
+                            </tr>
+                            <tr>
+                                <td>高阻（释放）</td>
+                                <td>高阻（释放）</td>
+                                <td>高</td>
+                                <td>NACK（无应答）</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📝 代码示例</h3>
+                        <div class="code-block">
+<span class="comment">// 主机等待ACK</span>
+<span class="keyword">uint8_t</span> <span class="function">I2C_WaitAck</span>(<span class="keyword">void</span>) {
+    <span class="keyword">uint8_t</span> ack;
+    SDA_HIGH();          <span class="comment">// 释放SDA</span>
+    <span class="function">delay_us</span>(2);
+    SCL_HIGH();          <span class="comment">// 拉高SCL</span>
+    <span class="function">delay_us</span>(2);
+    ack = <span class="function">SDA_READ</span>(); <span class="comment">// 读取ACK（0=ACK, 1=NACK）</span>
+    SCL_LOW();
+    <span class="keyword">return</span> ack;
+}
+
+<span class="comment">// 从机发送ACK</span>
+<span class="keyword">void</span> <span class="function">I2C_SendAck</span>(<span class="keyword">void</span>) {
+    SCL_LOW();           <span class="comment">// 等待主机拉低SCL</span>
+    SDA_LOW();           <span class="comment">// 拉低SDA发送ACK</span>
+    <span class="function">delay_us</span>(5);
+    SCL_HIGH();          <span class="comment">// 主机拉高SCL</span>
+    <span class="function">delay_us</span>(5);
+    SCL_LOW();
+}
+
+<span class="comment">// 从机地址匹配检查</span>
+<span class="keyword">if</span> (received_addr == MY_I2C_ADDRESS) {
+    <span class="function">I2C_SendAck</span>(); <span class="comment">// 地址匹配，发送ACK</span>
+} <span class="keyword">else</span> {
+    SDA_HIGH();        <span class="comment">// 地址不匹配，释放总线（NACK）</span>
+}
+                        </div>
+                    </div>
+                `
+            },
+            // 步骤11-18：发送数据字节每一位
+            ...Array.from({length: 8}, (_, i) => ({
+                title: `步骤${i+11}：发送数据位${7-i}`,
+                master: {
+                    state: "发送数据",
+                    scl: i % 2 === 0 ? "低→高" : "高→低",
+                    sda: (DATA >> (7-i)) & 1 ? "高电平" : "低电平",
+                    register: Array.from({length: 8}, (_, j) =>
+                        j < i ? ((DATA >> (7-j)) & 1).toString() : 'x'
+                    ),
+                    currentBit: i
+                },
+                slave: {
+                    state: "接收数据",
+                    addrMatch: "✅ 已匹配",
+                    ack: "准备ACK",
+                    register: Array.from({length: 8}, (_, j) =>
+                        j < i ? ((DATA >> (7-j)) & 1).toString() : 'x'
+                    ),
+                    currentBit: i
+                },
+                content: `
+                    <div class="step-section">
+                        <h3>⏱️ 时序说明</h3>
+                        <ul>
+                            <li><strong>当前位：</strong>数据位${7-i} = ${(DATA >> (7-i)) & 1}</li>
+                            <li><strong>SCL状态：</strong>${i % 2 === 0 ? '低电平（数据变化期）' : '高电平（数据采样期）'}</li>
+                            <li><strong>SDA状态：</strong>${(DATA >> (7-i)) & 1 ? '高电平' : '低电平'}</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📤 主机操作</h3>
+                        <ul>
+                            <li>数据字节传输与地址字节传输过程相同</li>
+                            <li>SCL低时改变SDA，SCL高时保持数据稳定</li>
+                            <li>当前发送位${7-i}：${(DATA >> (7-i)) & 1}</li>
+                            <li>已发送：${i+1}/8 位</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📥 从机操作</h3>
+                        <ul>
+                            <li>在SCL上升沿采样SDA</li>
+                            <li>将采样值存入接收移位寄存器</li>
+                            <li>已接收：${i+1}/8 位</li>
+                            ${i === 7 ? '<li><strong>准备发送ACK</strong></li>' : ''}
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>⚙️ 寄存器变化</h3>
+                        <div class="highlight">
+                            <strong>【主机发送寄存器】</strong><br>
+                            数据字节: 0x${DATA.toString(16).toUpperCase()} = 0b${DATA.toString(2).padStart(8, '0')}<br><br>
+                            当前状态: [${Array.from({length: 8}, (_, j) =>
+                                j < i ? ((DATA >> (7-j)) & 1) :
+                                j === i ? `<span style="color: #ffc107; font-weight: bold;">${(DATA >> (7-i)) & 1}</span>` : 'x'
+                            ).join('][')}]
+                        </div>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📝 代码示例</h3>
+                        <div class="code-block">
+<span class="comment">// 主机发送一字节数据</span>
+<span class="keyword">void</span> <span class="function">I2C_SendByte</span>(<span class="keyword">uint8_t</span> data) {
+    <span class="keyword">for</span> (<span class="keyword">uint8_t</span> i = 0; i < 8; i++) {
+        <span class="keyword">uint8_t</span> bit = (data >> (7 - i)) & 0x01; <span class="comment">// MSB先发</span>
+        <span class="function">I2C_SendBit</span>(bit);
+    }
+}
+
+<span class="comment">// 从机接收一字节数据</span>
+<span class="keyword">uint8_t</span> <span class="function">I2C_ReceiveByte</span>(<span class="keyword">void</span>) {
+    <span class="keyword">uint8_t</span> data = 0;
+    <span class="keyword">for</span> (<span class="keyword">uint8_t</span> i = 0; i < 8; i++) {
+        data = (data << 1) | <span class="function">I2C_ReceiveBit</span>(); <span class="comment">// 左移并读取新位</span>
+    }
+    <span class="keyword">return</span> data;
+}
+                        </div>
+                    </div>
+                `
+            })),
+            {
+                // 步骤19：数据ACK
+                title: "步骤19：数据应答（ACK）",
+                master: { state: "等待ACK", scl: "低→高", sda: "释放→低", register: [] },
+                slave: { state: "发送ACK", addrMatch: "✅ 已匹配", ack: "✅ 发送ACK", register: [] },
+                content: `
+                    <div class="step-section">
+                        <h3>⏱️ 时序说明</h3>
+                        <ul>
+                            <li>数据字节的ACK与地址ACK机制相同</li>
+                            <li>从机拉低SDA表示成功接收数据</li>
+                            <li>如果从机发送NACK，主机应停止发送</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📝 完整读写流程</h3>
+                        <table>
+                            <tr>
+                                <th>操作</th>
+                                <th>流程</th>
+                            </tr>
+                            <tr>
+                                <td>主机写</td>
+                                <td>START → 地址+W → ACK → 数据 → ACK → STOP</td>
+                            </tr>
+                            <tr>
+                                <td>主机读</td>
+                                <td>START → 地址+R → ACK → 数据 ← ACK ← STOP</td>
+                            </tr>
+                            <tr>
+                                <td>多字节写</td>
+                                <td>START → 地址+W → ACK → 数据1 → ACK → 数据2 → ACK → ... → STOP</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>💡 ACK vs NACK</h3>
+                        <div class="highlight">
+                            <strong>NACK的使用场景：</strong>
+                            <ul>
+                                <li>从机地址不匹配</li>
+                                <li>从机接收缓冲区满</li>
+                                <li>主机读取最后一字节时发送NACK，通知从机停止发送</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                // 步骤20：STOP条件
+                title: "步骤20：STOP 条件",
+                master: { state: "发送STOP", scl: "高电平", sda: "低→高", register: [] },
+                slave: { state: "检测STOP", addrMatch: "复位", ack: "复位", register: [] },
+                content: `
+                    <div class="step-section">
+                        <h3>⏱️ 时序说明</h3>
+                        <ul>
+                            <li><strong>关键时序：</strong>SCL为高时，SDA从低变高</li>
+                            <li><strong>时序约束：</strong>t<sub>SU;STO</sub> ≥ 4.0μs（标准模式）</li>
+                            <li><strong>作用：</strong>标志一次I2C传输的结束</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📤 主机操作</h3>
+                        <ol>
+                            <li>确保SCL为低</li>
+                            <li>拉低SDA</li>
+                            <li>拉高SCL</li>
+                            <li>等待t<sub>SU;STO</sub>时间</li>
+                            <li>拉高SDA（产生上升沿）</li>
+                            <li>总线返回空闲状态</li>
+                        </ol>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📥 从机操作</h3>
+                        <ul>
+                            <li>检测到SCL=高且SDA上升沿时，识别为STOP条件</li>
+                            <li>状态机返回IDLE</li>
+                            <li>清空接收缓冲区（如果需要）</li>
+                            <li>准备下一次通信</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>💡 START vs STOP 对比</h3>
+                        <table>
+                            <tr>
+                                <th>条件</th>
+                                <th>SCL状态</th>
+                                <th>SDA变化</th>
+                                <th>含义</th>
+                            </tr>
+                            <tr>
+                                <td>START</td>
+                                <td>高电平</td>
+                                <td>高→低（下降沿）</td>
+                                <td>开始传输</td>
+                            </tr>
+                            <tr>
+                                <td>STOP</td>
+                                <td>高电平</td>
+                                <td>低→高（上升沿）</td>
+                                <td>结束传输</td>
+                            </tr>
+                            <tr>
+                                <td>数据位</td>
+                                <td>低时SDA变化</td>
+                                <td>高时SDA稳定</td>
+                                <td>正常数据</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>📝 代码示例</h3>
+                        <div class="code-block">
+<span class="comment">// 标准库发送STOP条件</span>
+<span class="keyword">void</span> <span class="function">I2C_GenerateSTOP</span>(I2C_TypeDef* I2Cx, FunctionalState NewState) {
+    <span class="keyword">if</span> (NewState != DISABLE) {
+        I2Cx->CR1 |= I2C_CR1_STOP; <span class="comment">// 设置STOP位</span>
+    }
+}
+
+<span class="comment">// 手动实现STOP条件（GPIO模拟）</span>
+<span class="keyword">void</span> <span class="function">I2C_Stop</span>(<span class="keyword">void</span>) {
+    SCL_LOW();           <span class="comment">// 确保SCL为低</span>
+    SDA_LOW();           <span class="comment">// 确保SDA为低</span>
+    <span class="function">delay_us</span>(5);
+    SCL_HIGH();          <span class="comment">// 拉高SCL</span>
+    <span class="function">delay_us</span>(5);
+    SDA_HIGH();          <span class="comment">// 在SCL高时拉高SDA -> STOP</span>
+}
+
+<span class="comment">// 完整的I2C写操作</span>
+<span class="keyword">void</span> <span class="function">I2C_WriteData</span>(<span class="keyword">uint8_t</span> addr, <span class="keyword">uint8_t</span> data) {
+    <span class="function">I2C_Start</span>();              <span class="comment">// 发送START</span>
+    <span class="function">I2C_SendByte</span>(addr << 1); <span class="comment">// 发送地址+W</span>
+    <span class="keyword">if</span> (<span class="function">I2C_WaitAck</span>() == 0) {  <span class="comment">// 等待ACK</span>
+        <span class="function">I2C_SendByte</span>(data);   <span class="comment">// 发送数据</span>
+        <span class="function">I2C_WaitAck</span>();        <span class="comment">// 等待ACK</span>
+    }
+    <span class="function">I2C_Stop</span>();               <span class="comment">// 发送STOP</span>
+}
+                        </div>
+                    </div>
+
+                    <div class="step-section">
+                        <h3>🎉 恭喜完成I2C完整流程学习！</h3>
+                        <div class="highlight">
+                            <strong>学习总结：</strong>
+                            <ul>
+                                <li>✅ 理解开漏输出和上拉电阻的作用</li>
+                                <li>✅ 掌握START和STOP条件的时序</li>
+                                <li>✅ 了解位传输的完整流程（SCL低时SDA变化，SCL高时采样）</li>
+                                <li>✅ 理解ACK/NACK机制</li>
+                                <li>✅ 掌握移位寄存器的工作原理</li>
+                            </ul>
+                            <br>
+                            <strong>下一步建议：</strong>
+                            <ul>
+                                <li>📝 结合实际硬件进行测试（如AT24C02 EEPROM）</li>
+                                <li>🔍 使用逻辑分析仪观察波形</li>
+                                <li>💻 尝试实现软件I2C（GPIO模拟）</li>
+                                <li>⚡ 学习硬件I2C外设的使用</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // ========== Canvas 时序图绘制 ==========
+        const canvas = document.getElementById('timingCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawTimingDiagram() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const startX = 50;
+            const startY = 50;
+            const bitWidth = 60;
+            const totalBits = 21; // 空闲 + START + 8地址 + ACK + 8数据 + ACK + STOP
+
+            // 绘制网格
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= totalBits; i++) {
+                ctx.beginPath();
+                ctx.moveTo(startX + i * bitWidth, 0);
+                ctx.lineTo(startX + i * bitWidth, canvas.height);
+                ctx.stroke();
+            }
+
+            // 绘制高亮区域（当前步骤）
+            ctx.fillStyle = 'rgba(102, 126, 234, 0.15)';
+            ctx.fillRect(startX + currentStep * bitWidth, 0, bitWidth, canvas.height);
+
+            // 绘制SCL波形
+            ctx.strokeStyle = '#f39c12';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+
+            for (let i = 0; i <= totalBits; i++) {
+                const x = startX + i * bitWidth;
+                if (i === 0) {
+                    // 空闲状态：SCL高
+                    ctx.lineTo(x + bitWidth, startY);
+                } else if (i === 1) {
+                    // START：SCL保持高
+                    ctx.lineTo(x + bitWidth/2, startY);
+                    ctx.lineTo(x + bitWidth/2, startY + 60);
+                    ctx.lineTo(x + bitWidth, startY + 60);
+                } else if (i === 20) {
+                    // STOP前：SCL低→高
+                    ctx.lineTo(x, startY + 60);
+                    ctx.lineTo(x + bitWidth/2, startY + 60);
+                    ctx.lineTo(x + bitWidth/2, startY);
+                    ctx.lineTo(x + bitWidth, startY);
+                } else {
+                    // 正常时钟：低→高→低
+                    ctx.lineTo(x, startY + 60);
+                    ctx.lineTo(x + bitWidth/2, startY + 60);
+                    ctx.lineTo(x + bitWidth/2, startY);
+                    ctx.lineTo(x + bitWidth, startY);
+                }
+            }
+            ctx.stroke();
+
+            // 绘制SDA波形
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY + 80);
+
+            for (let i = 0; i <= totalBits; i++) {
+                const x = startX + i * bitWidth;
+                if (i === 0) {
+                    // 空闲：SDA高
+                    ctx.lineTo(x + bitWidth, startY + 80);
+                } else if (i === 1) {
+                    // START：SDA高→低
+                    ctx.lineTo(x + bitWidth/3, startY + 80);
+                    ctx.lineTo(x + bitWidth/3, startY + 140);
+                    ctx.lineTo(x + bitWidth, startY + 140);
+                } else if (i >= 2 && i <= 9) {
+                    // 地址字节
+                    const bit = (ADDRESS >> (9 - i)) & 1;
+                    const y = bit ? startY + 80 : startY + 140;
+                    ctx.lineTo(x, y);
+                    ctx.lineTo(x + bitWidth, y);
+                } else if (i === 10) {
+                    // 地址ACK：低
+                    ctx.lineTo(x, startY + 140);
+                    ctx.lineTo(x + bitWidth, startY + 140);
+                } else if (i >= 11 && i <= 18) {
+                    // 数据字节
+                    const bit = (DATA >> (18 - i)) & 1;
+                    const y = bit ? startY + 80 : startY + 140;
+                    ctx.lineTo(x, y);
+                    ctx.lineTo(x + bitWidth, y);
+                } else if (i === 19) {
+                    // 数据ACK：低
+                    ctx.lineTo(x, startY + 140);
+                    ctx.lineTo(x + bitWidth, startY + 140);
+                } else if (i === 20) {
+                    // STOP：SDA低→高
+                    ctx.lineTo(x + bitWidth/2, startY + 140);
+                    ctx.lineTo(x + bitWidth/2, startY + 80);
+                    ctx.lineTo(x + bitWidth, startY + 80);
+                }
+            }
+            ctx.stroke();
+
+            // 绘制标签
+            ctx.fillStyle = '#495057';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+
+            const labels = ['空闲', 'START', 'B7', 'B6', 'B5', 'B4', 'B3', 'B2', 'B1', 'B0',
+                           'ACK', 'D7', 'D6', 'D5', 'D4', 'D3', 'D2', 'D1', 'D0', 'ACK', 'STOP'];
+
+            labels.forEach((label, i) => {
+                ctx.fillText(label, startX + i * bitWidth + bitWidth/2, 20);
+            });
+
+            // 绘制SCL/SDA标签
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#f39c12';
+            ctx.fillText('SCL', startX - 10, startY + 5);
+            ctx.fillStyle = '#27ae60';
+            ctx.fillText('SDA', startX - 10, startY + 85);
+
+            // 当前步骤指示器
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('▼', startX + currentStep * bitWidth + bitWidth/2, canvas.height - 10);
+        }
+
+        // ========== 状态更新 ==========
+        function updateStatus() {
+            const step = stepContents[currentStep];
+
+            // 更新主机状态
+            document.getElementById('masterState').textContent = step.master.state;
+            document.getElementById('masterSCL').textContent = step.master.scl;
+            document.getElementById('masterSDA').textContent = step.master.sda;
+
+            // 更新从机状态
+            document.getElementById('slaveState').textContent = step.slave.state;
+            document.getElementById('addrMatch').textContent = step.slave.addrMatch;
+            document.getElementById('ackStatus').textContent = step.slave.ack;
+
+            // 更新寄存器
+            updateRegister('masterRegister', step.master.register, step.master.currentBit);
+            updateRegister('slaveRegister', step.slave.register, step.slave.currentBit);
+
+            // 更新内容区
+            document.getElementById('contentPanel').innerHTML = `
+                <div class="step-content">
+                    <h2 class="step-title">${step.title}</h2>
+                    ${step.content}
+                </div>
+            `;
+
+            // 更新步骤指示器
+            document.getElementById('stepIndicator').textContent = `步骤 ${currentStep}/${totalSteps - 1}`;
+
+            // 更新进度条
+            document.getElementById('progressBar').style.width = `${(currentStep / (totalSteps - 1)) * 100}%`;
+
+            // 重绘时序图
+            drawTimingDiagram();
+        }
+
+        function updateRegister(elementId, bits, currentBit) {
+            const container = document.getElementById(elementId);
+            if (bits.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #6c757d;">（无数据）</div>';
+                return;
+            }
+
+            container.innerHTML = bits.map((bit, index) =>
+                `<div class="register-bit ${index < bits.length - 1 && bit !== 'x' ? 'active' : ''} ${index === currentBit ? 'current' : ''}">${bit}</div>`
+            ).join('');
+        }
+
+        // ========== 控制函数 ==========
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStatus();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStatus();
+            }
+        }
+
+        function resetStep() {
+            currentStep = 0;
+            isPlaying = false;
+            if (playInterval) clearInterval(playInterval);
+            document.getElementById('playBtn').textContent = '⏯️ 播放';
+            updateStatus();
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('playBtn');
+
+            if (isPlaying) {
+                btn.textContent = '⏸️ 暂停';
+                playInterval = setInterval(() => {
+                    if (currentStep < totalSteps - 1) {
+                        nextStep();
+                    } else {
+                        togglePlay(); // 播放完毕自动停止
+                    }
+                }, 5000); // 每步5秒
+            } else {
+                btn.textContent = '⏯️ 播放';
+                if (playInterval) {
+                    clearInterval(playInterval);
+                    playInterval = null;
+                }
+            }
+        }
+
+        // ========== 键盘控制 ==========
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    prevStep();
+                    break;
+                case 'ArrowRight':
+                    nextStep();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'r':
+                case 'R':
+                    resetStep();
+                    break;
+            }
+        });
+
+        // ========== 初始化 ==========
+        window.addEventListener('load', () => {
+            updateStatus();
+            console.log('I2C教程加载完成！');
+            console.log('使用方向键切换步骤，空格键播放/暂停，R键重置');
+        });
+    </script>
+</body>
+</html>

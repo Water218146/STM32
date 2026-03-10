@@ -14,7 +14,15 @@
       "Bash(ping:*)",
       "Bash(tasklist:*)",
       "Bash(node test_mcu_auth.js:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "WebFetch(domain:docs.bigmodel.cn)",
+      "Bash(npm install:*)",
+      "WebSearch",
+      "WebFetch(domain:open.bigmodel.cn)",
+      "Bash(powershell -Command \"Get-Process -Name node | Select-Object Id, ProcessName, StartTime\")",
+      "Bash(powershell -Command \"Stop-Process -Name node -Force\")",
+      "Bash(wmic process where \"ProcessId=53044\" delete)",
+      "Bash(wmic process where \"ProcessId=48200\" delete)"
     ]
   }
 }

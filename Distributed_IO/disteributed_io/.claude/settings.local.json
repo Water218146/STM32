@@ -3,7 +3,19 @@
     "allow": [
       "Bash(dir:*)",
       "Bash(findstr:*)",
-      "Bash(python generate_stack_heap_diagrams.py:*)"
+      "Bash(python generate_stack_heap_diagrams.py:*)",
+      "Bash(python:*)",
+      "Bash(where claude)",
+      "Bash(cmd /c:*)",
+      "Skill(zcf:init-project)",
+      "Bash(start /d/AAAWaterCode/Distributed_IO/disteributed_io/docs/learning_tutorials/learn_i2c.html)",
+      "Bash(start /d/AAAWaterCode/Distributed_IO/disteributed_io/docs/learning_tutorials/learn_i2c_v2.html)",
+      "Bash(ls:*)",
+      "Bash(start /d/AAAWaterCode/Distributed_IO/disteributed_io/docs/learning_tutorials/learn_i2c_v3.html)",
+      "Bash(start /d/AAAWaterCode/Distributed_IO/disteributed_io/docs/learning_tutorials/learn_i2c_final.html)",
+      "Bash(explorer.exe:*)",
+      "Bash(cmd.exe /c start \"\" \"D:\\\\AAAWaterCode\\\\Distributed_IO\\\\disteributed_io\\\\docs\\\\learning_tutorials\")",
+      "Bash(cmd.exe /c start \"\" \"D:\\\\AAAWaterCode\\\\Distributed_IO\\\\disteributed_io\\\\docs\\\\learning_tutorials\\\\learn_i2c_final.html\")"
     ]
   }
 }

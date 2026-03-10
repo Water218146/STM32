@@ -30,6 +30,9 @@
             <button class="mode-tab" data-mode="mcu">
                 MCU控制
             </button>
+            <button class="mode-tab" data-mode="ai">
+                🤖 AI助手
+            </button>
         </section>
 
         <!-- 连接配置面板 -->
@@ -248,6 +251,42 @@
                 <div class="mcu-log-container">
                     <div class="log-title">📝 MCU通信日志</div>
                     <div class="log-content" id="mcuLog"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- AI助手模式内容（默认隐藏） -->
+        <div class="mode-content" id="aiMode">
+            <section class="ai-control-section">
+                <div class="ai-header">
+                    <h2 class="section-title">🤖 AI助手</h2>
+                    <div class="ai-model-selector">
+                        <label for="aiModelSelect">模型：</label>
+                        <select id="aiModelSelect" class="model-select">
+                            <option value="GLM-4-Flash" selected>GLM-4-Flash（推荐，稳定）</option>
+                            <option value="GLM-4.7-Flash">GLM-4.7-Flash（更快，可能限流）</option>
+                            <option value="GLM-4-Plus">GLM-4-Plus（高级，消耗更多）</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="ai-chat-container" id="aiChatContainer">
+                    <div class="ai-welcome-message">
+                        <p>👋 你好！我是WebCC1的AI助手。</p>
+                        <p>我可以帮助你：</p>
+                        <ul>
+                            <li>💡 控制LED灯（仅管理员）</li>
+                            <li>📊 查询设备状态</li>
+                            <li>❓ 回答系统问题</li>
+                        </ul>
+                        <p class="ai-tip">💡 提示：控制硬件时我会先询问您是否确认</p>
+                    </div>
+                </div>
+
+                <div class="ai-input-panel">
+                    <textarea id="aiInput" class="ai-input"
+                        placeholder="输入问题或指令..." rows="3"></textarea>
+                    <button id="aiSendBtn" class="btn btn-primary">发送</button>
                 </div>
             </section>
         </div>

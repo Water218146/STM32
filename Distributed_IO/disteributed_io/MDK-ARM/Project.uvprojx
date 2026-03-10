@@ -340,7 +340,7 @@
               <MiscControls>--C99</MiscControls>
               <Define>USE_STDPERIPH_DRIVER,STM32F051,USE_DEFAULT_TIMEOUT_CALLBACK</Define>
               <Undefine></Undefine>
-              <IncludePath>..\;..\User;..\CMSIS\STM32F0xx\Source\Templates\arm;..\CMSIS\STM32F0xx\Include;..\StdPeriph_Driver\src;..\StdPeriph_Driver\inc;..\APP;..\Hardware</IncludePath>
+              <IncludePath>..\;..\User;..\CMSIS\STM32F0xx\Source\Templates\arm;..\CMSIS\STM32F0xx\Include;..\StdPeriph_Driver\src;..\StdPeriph_Driver\inc;..\APP;..\Hardware;..\Components\ringbuffer</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -381,51 +381,6 @@
         </TargetArmAds>
       </TargetOption>
       <Groups>
-        <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_stm32f051.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm0.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmFunc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmInstr.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>User</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f0xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\stm32f0xx_it.c</FilePath>
-            </File>
-          </Files>
-        </Group>
         <Group>
           <GroupName>StdPeriph_Driver</GroupName>
           <Files>
@@ -547,6 +502,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>System/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f051.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm0.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmFunc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmInstr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components/Ringbuffer</GroupName>
+          <Files>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Components\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
@@ -564,6 +559,51 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\hardware_GPIO.c</FilePath>
             </File>
+            <File>
+              <FileName>hardware_NVIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_NVIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.h</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_ADDA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_ADDA.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_iic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f0xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f0xx_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -578,6 +618,31 @@
               <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>led_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\led_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\input_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\uart_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\adc_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\dac_app.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -956,51 +1021,6 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_stm32f051.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm0.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmFunc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmInstr.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>User</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f0xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\stm32f0xx_it.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>StdPeriph_Driver</GroupName>
           <Files>
             <File>
@@ -1121,6 +1141,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>System/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f051.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm0.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmFunc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmInstr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components/Ringbuffer</GroupName>
+          <Files>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Components\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
@@ -1138,6 +1198,51 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\hardware_GPIO.c</FilePath>
             </File>
+            <File>
+              <FileName>hardware_NVIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_NVIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.h</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_ADDA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_ADDA.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_iic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f0xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f0xx_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1152,6 +1257,31 @@
               <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>led_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\led_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\input_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\uart_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\adc_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\dac_app.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1530,51 +1660,6 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_stm32f051.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm0.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmFunc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmInstr.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>User</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f0xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\stm32f0xx_it.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>StdPeriph_Driver</GroupName>
           <Files>
             <File>
@@ -1695,6 +1780,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>System/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f051.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm0.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmFunc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmInstr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components/Ringbuffer</GroupName>
+          <Files>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Components\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
@@ -1712,6 +1837,51 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\hardware_GPIO.c</FilePath>
             </File>
+            <File>
+              <FileName>hardware_NVIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_NVIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.h</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_ADDA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_ADDA.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_iic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f0xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f0xx_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1726,6 +1896,31 @@
               <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>led_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\led_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\input_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\uart_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\adc_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\dac_app.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -2104,51 +2299,6 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_stm32f051.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm0.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmFunc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmInstr.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>User</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f0xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\stm32f0xx_it.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>StdPeriph_Driver</GroupName>
           <Files>
             <File>
@@ -2269,6 +2419,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>System/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f051.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm0.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmFunc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmInstr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components/Ringbuffer</GroupName>
+          <Files>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Components\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
@@ -2286,6 +2476,51 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\hardware_GPIO.c</FilePath>
             </File>
+            <File>
+              <FileName>hardware_NVIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_NVIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.h</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_ADDA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_ADDA.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_iic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f0xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f0xx_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -2300,6 +2535,31 @@
               <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>led_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\led_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\input_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\uart_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\adc_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\dac_app.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -2678,51 +2938,6 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_stm32f051.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm0.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmFunc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmInstr.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>User</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f0xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\stm32f0xx_it.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>StdPeriph_Driver</GroupName>
           <Files>
             <File>
@@ -2843,6 +3058,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>System/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f051.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm0.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmFunc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmInstr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components/Ringbuffer</GroupName>
+          <Files>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Components\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
@@ -2860,6 +3115,51 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\hardware_GPIO.c</FilePath>
             </File>
+            <File>
+              <FileName>hardware_NVIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_NVIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.h</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_ADDA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_ADDA.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_iic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f0xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f0xx_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -2874,6 +3174,31 @@
               <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>led_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\led_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\input_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\uart_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\adc_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\dac_app.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -3252,51 +3577,6 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_stm32f051.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm0.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmFunc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmInstr.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>User</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f0xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\stm32f0xx_it.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>StdPeriph_Driver</GroupName>
           <Files>
             <File>
@@ -3417,6 +3697,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>System/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f051.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm0.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmFunc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmInstr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components/Ringbuffer</GroupName>
+          <Files>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Components\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
@@ -3434,6 +3754,51 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\hardware_GPIO.c</FilePath>
             </File>
+            <File>
+              <FileName>hardware_NVIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_NVIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.h</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_ADDA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_ADDA.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_iic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f0xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f0xx_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -3448,6 +3813,31 @@
               <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>led_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\led_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\input_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\uart_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\adc_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\dac_app.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -3826,51 +4216,6 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_stm32f051.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm0.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmFunc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmInstr.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>User</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f0xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\stm32f0xx_it.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>StdPeriph_Driver</GroupName>
           <Files>
             <File>
@@ -3991,6 +4336,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>System/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f051.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm0.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmFunc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmInstr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components/Ringbuffer</GroupName>
+          <Files>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Components\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
@@ -4008,6 +4393,51 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\hardware_GPIO.c</FilePath>
             </File>
+            <File>
+              <FileName>hardware_NVIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_NVIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.h</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_ADDA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_ADDA.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_iic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f0xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f0xx_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -4022,6 +4452,31 @@
               <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>led_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\led_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\input_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\uart_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\adc_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\dac_app.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -4400,51 +4855,6 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_stm32f051.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm0.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmFunc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmInstr.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>User</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f0xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\stm32f0xx_it.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>StdPeriph_Driver</GroupName>
           <Files>
             <File>
@@ -4565,6 +4975,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>System/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f051.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm0.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmFunc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmInstr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components/Ringbuffer</GroupName>
+          <Files>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Components\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
@@ -4582,6 +5032,51 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\hardware_GPIO.c</FilePath>
             </File>
+            <File>
+              <FileName>hardware_NVIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_NVIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.h</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_ADDA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_ADDA.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_iic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f0xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f0xx_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -4596,6 +5091,31 @@
               <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>led_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\led_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\input_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\uart_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\adc_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\dac_app.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -4974,51 +5494,6 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_stm32f051.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm0.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmFunc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cmInstr.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>User</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f0xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\stm32f0xx_it.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>StdPeriph_Driver</GroupName>
           <Files>
             <File>
@@ -5139,6 +5614,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>System/CMSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f051.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Source\Templates\arm\startup_stm32f051.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm0.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cm0.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmFunc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmFunc.h</FilePath>
+            </File>
+            <File>
+              <FileName>core_cmInstr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CMSIS\STM32F0xx\Include\core_cmInstr.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components/Ringbuffer</GroupName>
+          <Files>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Components\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
@@ -5156,6 +5671,51 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\hardware_GPIO.c</FilePath>
             </File>
+            <File>
+              <FileName>hardware_NVIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_NVIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\hardware_NVIC.h</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_ADDA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_ADDA.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hardware_iic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f0xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f0xx_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -5170,6 +5730,31 @@
               <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>led_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\led_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\input_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\uart_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\adc_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\dac_app.c</FilePath>
             </File>
           </Files>
         </Group>

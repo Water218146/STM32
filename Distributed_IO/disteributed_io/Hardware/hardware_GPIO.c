@@ -10,6 +10,12 @@ void gpio_init(void)//gpio初始化
 	  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC|RCC_AHBPeriph_GPIOB|RCC_AHBPeriph_GPIOA|RCC_AHBPeriph_GPIOD|RCC_AHBPeriph_GPIOF, ENABLE); //使能GPIOC/B/A时钟  
    //led
     GPIO_LED_Configuretion();
+	 // 初始化LED为全灭状态（高电平）
+	 GPIO_SetBits(GPIOC, GPIO_Pin_10|GPIO_Pin_11|GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15);
+	 GPIO_SetBits(GPIOB, GPIO_Pin_3|GPIO_Pin_4|GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_8|GPIO_Pin_9);
+	 GPIO_SetBits(GPIOD, GPIO_Pin_2);
+	 GPIO_SetBits(GPIOA, GPIO_Pin_15);
+	 GPIO_SetBits(GPIOF, GPIO_Pin_7);
 	//输入
     GPIO_Input_Configuretion();
 }
@@ -69,8 +75,10 @@ void GPIO_Input_Configuretion(void)//输入配置
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
-    GPIO_Init(GPIOC, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
+
+

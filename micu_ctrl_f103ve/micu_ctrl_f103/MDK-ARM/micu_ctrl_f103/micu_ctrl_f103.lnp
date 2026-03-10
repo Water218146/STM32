@@ -1,0 +1,22 @@
+--cpu Cortex-M3
+"micu_ctrl_f103\startup_stm32f103xe.o"
+"micu_ctrl_f103\main.o"
+"micu_ctrl_f103\gpio.o"
+"micu_ctrl_f103\stm32f1xx_it.o"
+"micu_ctrl_f103\stm32f1xx_hal_msp.o"
+"micu_ctrl_f103\stm32f1xx_hal_gpio_ex.o"
+"micu_ctrl_f103\stm32f1xx_hal.o"
+"micu_ctrl_f103\stm32f1xx_hal_rcc.o"
+"micu_ctrl_f103\stm32f1xx_hal_rcc_ex.o"
+"micu_ctrl_f103\stm32f1xx_hal_gpio.o"
+"micu_ctrl_f103\stm32f1xx_hal_dma.o"
+"micu_ctrl_f103\stm32f1xx_hal_cortex.o"
+"micu_ctrl_f103\stm32f1xx_hal_pwr.o"
+"micu_ctrl_f103\stm32f1xx_hal_flash.o"
+"micu_ctrl_f103\stm32f1xx_hal_flash_ex.o"
+"micu_ctrl_f103\stm32f1xx_hal_exti.o"
+"micu_ctrl_f103\system_stm32f1xx.o"
+--strict --scatter "micu_ctrl_f103\micu_ctrl_f103.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "micu_ctrl_f103.map" -o micu_ctrl_f103\micu_ctrl_f103.axf

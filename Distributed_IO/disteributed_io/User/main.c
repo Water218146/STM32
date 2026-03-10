@@ -37,31 +37,19 @@
   * @param  None
   * @retval None
   */
+
 int main(void)
 {
-//	scheduler_init();//调度器初始化
+	scheduler_init();//调度器初始化
 	hardwire_init();//硬件配置初始化	
-//  GPIO_SetBits(GPIOC,GPIO_Pin_15);	
-
-//	GPIO_ResetBits(GPIOC,GPIO_Pin_15);
-//	GPIO_ResetBits(GPIOC,GPIO_Pin_14);
-//	GPIO_ResetBits(GPIOC,GPIO_Pin_13);
-//	GPIO_ResetBits(GPIOB,GPIO_Pin_9);
-//	GPIO_ResetBits(GPIOB,GPIO_Pin_8);
-//	GPIO_ResetBits(GPIOB,GPIO_Pin_7);
-//	GPIO_ResetBits(GPIOB,GPIO_Pin_6);
-//	GPIO_ResetBits(GPIOB,GPIO_Pin_5);
-//	GPIO_ResetBits(GPIOB,GPIO_Pin_4);
-//	GPIO_ResetBits(GPIOB,GPIO_Pin_3);
-//	GPIO_ResetBits(GPIOD,GPIO_Pin_2);
-//	GPIO_ResetBits(GPIOC,GPIO_Pin_12);
-//	GPIO_ResetBits(GPIOC,GPIO_Pin_11);
-//	GPIO_ResetBits(GPIOC,GPIO_Pin_10);
-//	GPIO_ResetBits(GPIOA,GPIO_Pin_15);
-//	GPIO_ResetBits(GPIOF,GPIO_Pin_7);
+  uart_init();//串口初始化
+	my_printf(USART1,"usart1_ok2");
+	PWM_SetDuty(700);	
   while (1)
   {
+		IWDG_ReloadCounter();
 		scheduler_run();
+			
   }
 }
 
@@ -85,7 +73,7 @@ void assert_failed(uint8_t* file, uint32_t line)
   {
   }
 }
-#endif
+#endif 
 
 /**
   * @}
